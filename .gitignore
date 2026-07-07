@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+*.sqlite
+*.sqlite-journal
+prisma/*.db
+coverage/
+.nyc_output/
+.vscode/
+.idea/
+*.swp
+*.swo
