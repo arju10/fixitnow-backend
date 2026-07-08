@@ -1,46 +1,22 @@
+import 'dotenv/config';
+import config from './config';
+import { prisma } from './lib/prisma';
 import app from './app';
-import prisma from './utils/prisma';
 
-const PORT = process.env.PORT || 5000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = config.port;
 
-const startServer = async () => {
+async function main() {
   try {
     await prisma.$connect();
-    console.log('✅ Database connected successfully');
-
+    console.log('Connected to the database successfully.');
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🔧 Environment: ${NODE_ENV}`);
-      console.log(`📝 API URL: http://localhost:${PORT}/api`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
+      console.log(`Server is running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('Error starting the server:', error);
+    await prisma.$disconnect();
     process.exit(1);
   }
-};
+}
 
-process.on('SIGINT', async () => {
-  console.log('🛑 Shutting down gracefully...');
-  await prisma.$disconnect();
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  console.log('🛑 Shutting down gracefully...');
-  await prisma.$disconnect();
-  process.exit(0);
-});
-
-process.on('uncaughtException', (error) => {
-  console.error('💥 Uncaught Exception:', error);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason) => {
-  console.error('💥 Unhandled Rejection:', reason);
-  process.exit(1);
-});
-
-startServer();
+main();

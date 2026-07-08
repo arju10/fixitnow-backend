@@ -12,3 +12,11 @@ coverage/
 .idea/
 *.swp
 *.swo
+
+/src/generated/prisma
+
+/src/generated/prisma
+
+/src/generated/prisma
+
+/src/generated/prisma
