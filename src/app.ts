@@ -9,12 +9,13 @@ import { sendResponse } from './utils/ApiResponse';
 import authRoutes from './modules/auth/auth.route';
 import userRoutes from './modules/users/users.route';
 import adminRoutes from './modules/admin/admin.route';
+import categoryRoutes from './modules/categories/categories.route';
 
 const app: Application = express();
 
 app.use(
   cors({
-    origin: config.app_url,
+    origin: config.cors_origin,
     credentials: true,
   })
 );
@@ -35,6 +36,7 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

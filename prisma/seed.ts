@@ -18,12 +18,12 @@ async function main() {
       password: hashedPassword,
       name: 'Admin User',
       phone: '+1234567890',
-      role: 'ADMIN', // 👈 Admin role
+      role: 'ADMIN', 
       status: 'ACTIVE',
     },
   });
 
-  console.log('✅ Admin created:', admin.email);
+  console.log('Admin created:', admin.email);
 
   // Create sample categories
   const categories = await Promise.all([
@@ -61,7 +61,7 @@ async function main() {
     }),
   ]);
 
-  console.log('✅ Categories created');
+  console.log('Categories created');
 
   // Create sample technician
   const techPassword = await bcrypt.hash('tech123', 10);
@@ -85,7 +85,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Technician created');
+  console.log('Technician created');
 
   // Create sample customer
   const customerPassword = await bcrypt.hash('customer123', 10);
@@ -102,18 +102,18 @@ async function main() {
     },
   });
 
-  console.log('✅ Customer created');
+  console.log('Customer created');
 
-  console.log('\n🎉 Seeding completed successfully!');
-  console.log('\n📋 Login Credentials:');
-  console.log('🔑 Admin: admin@fixitnow.com / admin123');
-  console.log('🔑 Technician: tech@fixitnow.com / tech123');
-  console.log('🔑 Customer: customer@fixitnow.com / customer123');
+  console.log('\nSeeding completed successfully!');
+  console.log('\n Login Credentials:');
+  console.log('Admin: admin@fixitnow.com / admin123');
+  console.log('Technician: tech@fixitnow.com / tech123');
+  console.log('Customer: customer@fixitnow.com / customer123');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seeding failed:', e);
+    console.error('Seeding failed:', e);
     process.exit(1);
   })
   .finally(async () => {
