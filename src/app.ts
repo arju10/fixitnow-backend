@@ -10,6 +10,7 @@ import authRoutes from './modules/auth/auth.route';
 import userRoutes from './modules/users/users.route';
 import adminRoutes from './modules/admin/admin.route';
 import categoryRoutes from './modules/categories/categories.route';
+import serviceRoutes from './modules/services/services.route';
 
 const app: Application = express();
 
@@ -37,6 +38,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/services', serviceRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
