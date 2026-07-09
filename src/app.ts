@@ -12,6 +12,7 @@ import adminRoutes from './modules/admin/admin.route';
 import categoryRoutes from './modules/categories/categories.route';
 import serviceRoutes from './modules/services/services.route';
 import technicianRoutes from './modules/technicians/technicians.route';
+import customerRoutes from './modules/customer/customer.route';
 
 const app: Application = express();
 
@@ -41,6 +42,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/technicians', technicianRoutes);
+app.use('/api/customer', customerRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

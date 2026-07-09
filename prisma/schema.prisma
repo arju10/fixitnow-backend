@@ -64,6 +64,7 @@ model User {
   updatedAt    DateTime   @updatedAt
 
   technicianProfile TechnicianProfile?
+  customerProfile   CustomerProfile?
   bookings          Booking[]          @relation("CustomerBookings")
   reviews           Review[]           @relation("CustomerReviews")
   payments          Payment[]
@@ -93,6 +94,24 @@ model TechnicianProfile {
   reviews      Review[]           @relation("TechnicianReviews")
 
   @@map("technician_profiles")
+}
+
+// ============================================
+// CUSTOMER PROFILE MODEL
+// ============================================
+
+model CustomerProfile {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  address    String?
+  city       String?
+  postalCode String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("customer_profiles")
 }
 
 // ============================================
