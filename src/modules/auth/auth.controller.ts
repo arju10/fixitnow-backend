@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { sendResponse } from '../../utils/ApiResponse';
 import { catchAsync } from '../../utils/catchAsync';
+import { ApiError } from '../../utils/ApiError';
 import { registerUser, loginUser, getCurrentUser } from './auth.service';
 import type { RegisterInput, LoginInput } from './auth.validation';
 
@@ -18,7 +19,7 @@ export const login = catchAsync(async (req: Request, res: Response) => {
 
 export const getMe = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
-    throw new Error('User not authenticated');
+    throw new ApiError(401, 'User not authenticated');
   }
   const user = await getCurrentUser(req.user.id);
   sendResponse(res, 200, 'User fetched successfully', user);
