@@ -42,6 +42,13 @@ export const registerUser = async (input: RegisterInput) => {
           userId: newUser.id,
         },
       });
+    } else if (role === Role.ADMIN) {
+      await tx.adminProfile.create({
+        data: {
+          userId: newUser.id,
+          isSuperAdmin: false, // First admin can be promoted later
+        },
+      });
     }
 
     return newUser;
@@ -104,6 +111,7 @@ export const getCurrentUser = async (userId: string) => {
         },
       },
       customerProfile: true,
+      adminProfile: true,
     },
   });
 

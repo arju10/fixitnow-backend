@@ -9,11 +9,14 @@ import { sendResponse } from './utils/ApiResponse';
 import authRoutes from './modules/auth/auth.route';
 import userRoutes from './modules/users/users.route';
 import adminRoutes from './modules/admin/admin.route';
+import adminProfileRoutes from './modules/admin-profile/admin-profile.route';
 import categoryRoutes from './modules/categories/categories.route';
 import serviceRoutes from './modules/services/services.route';
 import technicianRoutes from './modules/technicians/technicians.route';
-import customerRoutes from './modules/customer/customer.route';
 import bookingRoutes from './modules/bookings/bookings.route';
+import customerRoutes from './modules/customer/customer.route';
+import reviewRoutes from './modules/reviews/reviews.route';
+import paymentRoutes from './modules/payments/payments.route';
 
 const app: Application = express();
 
@@ -40,11 +43,14 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin-profile', adminProfileRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/technicians', technicianRoutes);
-app.use('/api/customer', customerRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/customer', customerRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

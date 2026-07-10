@@ -1,5 +1,6 @@
 import { sendResponse } from '../../utils/ApiResponse';
 import { catchAsync } from '../../utils/catchAsync';
+import { ApiError } from '../../utils/ApiError';
 import { registerUser, loginUser, getCurrentUser } from './auth.service';
 export const register = catchAsync(async (req, res) => {
     const input = req.body;
@@ -13,7 +14,7 @@ export const login = catchAsync(async (req, res) => {
 });
 export const getMe = catchAsync(async (req, res) => {
     if (!req.user) {
-        throw new Error('User not authenticated');
+        throw new ApiError(401, 'User not authenticated');
     }
     const user = await getCurrentUser(req.user.id);
     sendResponse(res, 200, 'User fetched successfully', user);

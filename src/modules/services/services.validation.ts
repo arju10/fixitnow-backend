@@ -17,6 +17,7 @@ export const updateServiceSchema = z.object({
     price: z.number().positive('Price must be positive').optional(),
     durationMins: z.number().positive('Duration must be positive').optional(),
     categoryId: z.string().optional(),
+    isActive: z.boolean().optional(), // 👈 Add this
   }),
 });
 

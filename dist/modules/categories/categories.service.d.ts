@@ -9,6 +9,7 @@ export declare const getAllCategories: () => Promise<({
     name: string;
     id: string;
     createdAt: Date;
+    updatedAt: Date;
     description: string | null;
 })[]>;
 export declare const getSingleCategory: (categoryId: string) => Promise<{
@@ -46,18 +47,21 @@ export declare const getSingleCategory: (categoryId: string) => Promise<{
     name: string;
     id: string;
     createdAt: Date;
+    updatedAt: Date;
     description: string | null;
 }>;
 export declare const createNewCategory: (input: CreateCategoryInput) => Promise<{
     name: string;
     id: string;
     createdAt: Date;
+    updatedAt: Date;
     description: string | null;
 }>;
 export declare const updateSingleCategory: (categoryId: string, input: UpdateCategoryInput) => Promise<{
     name: string;
     id: string;
     createdAt: Date;
+    updatedAt: Date;
     description: string | null;
 }>;
 export declare const deleteSingleCategory: (categoryId: string) => Promise<void>;

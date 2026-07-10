@@ -10,6 +10,9 @@ import userRoutes from './modules/users/users.route';
 import adminRoutes from './modules/admin/admin.route';
 import categoryRoutes from './modules/categories/categories.route';
 import serviceRoutes from './modules/services/services.route';
+import technicianRoutes from './modules/technicians/technicians.route';
+import customerRoutes from './modules/customer/customer.route';
+import bookingRoutes from './modules/bookings/bookings.route';
 const app = express();
 app.use(cors({
     origin: config.cors_origin,
@@ -31,6 +34,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/technicians', technicianRoutes);
+app.use('/api/customer', customerRoutes);
+app.use('/api/bookings', bookingRoutes);
 // 404 handler
 app.use(notFoundHandler);
 // Global error handler

@@ -42,6 +42,7 @@ export declare const getAllUsers: (filters?: {
     phone: string | null;
     role: import("@prisma/client").$Enums.Role;
     id: string;
+    profileImage: string | null;
     status: import("@prisma/client").$Enums.UserStatus;
     createdAt: Date;
     updatedAt: Date;
@@ -86,6 +87,7 @@ export declare const getUserById: (userId: string) => Promise<{
     phone: string | null;
     role: import("@prisma/client").$Enums.Role;
     id: string;
+    profileImage: string | null;
     status: import("@prisma/client").$Enums.UserStatus;
     createdAt: Date;
     updatedAt: Date;
@@ -96,6 +98,7 @@ export declare const updateUser: (userId: string, input: UpdateUserInput) => Pro
     phone: string | null;
     role: import("@prisma/client").$Enums.Role;
     id: string;
+    profileImage: string | null;
     status: import("@prisma/client").$Enums.UserStatus;
     createdAt: Date;
     updatedAt: Date;
@@ -106,6 +109,7 @@ export declare const updateUserStatus: (userId: string, status: string) => Promi
     phone: string | null;
     role: import("@prisma/client").$Enums.Role;
     id: string;
+    profileImage: string | null;
     status: import("@prisma/client").$Enums.UserStatus;
     createdAt: Date;
     updatedAt: Date;

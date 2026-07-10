@@ -17,8 +17,9 @@ export const createBooking = async (customerId: string, input: CreateBookingInpu
     throw new ApiError(404, 'Service not found');
   }
 
-  if (!service.isActive) {
-    throw new ApiError(400, 'Service is not available');
+  // Check if service is active
+  if (service.isActive === false) {
+    throw new ApiError(400, 'Service is currently not available');
   }
 
   // Check if technician is available at that time

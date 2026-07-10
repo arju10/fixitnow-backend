@@ -6,6 +6,7 @@ export declare const registerUser: (input: RegisterInput) => Promise<{
         phone: string | null;
         role: import("@prisma/client").$Enums.Role;
         id: string;
+        profileImage: string | null;
         status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
@@ -19,6 +20,7 @@ export declare const loginUser: (input: LoginInput) => Promise<{
         phone: string | null;
         role: import("@prisma/client").$Enums.Role;
         id: string;
+        profileImage: string | null;
         status: import("@prisma/client").$Enums.UserStatus;
         createdAt: Date;
         updatedAt: Date;
@@ -58,11 +60,21 @@ export declare const getCurrentUser: (userId: string) => Promise<{
         totalReviews: number;
         userId: string;
     }) | null;
+    customerProfile: {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+        address: string | null;
+        city: string | null;
+        postalCode: string | null;
+    } | null;
     email: string;
     name: string;
     phone: string | null;
     role: import("@prisma/client").$Enums.Role;
     id: string;
+    profileImage: string | null;
     status: import("@prisma/client").$Enums.UserStatus;
     createdAt: Date;
     updatedAt: Date;

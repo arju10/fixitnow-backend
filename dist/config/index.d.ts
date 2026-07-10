@@ -10,6 +10,7 @@ declare const _default: {
     jwt_refresh_expires_in: string;
     stripe_product_price_id: string;
     stripe_secret_key: string;
+    stripe_publishable_key: string;
     stripe_webhook_secret: string;
 };
 export default _default;
