@@ -1954,7 +1954,7 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:5000/api"
+			"value": "https://fixitnow-backend-psi.vercel.app/api"
 		},
 		{
 			"key": "customerToken",
