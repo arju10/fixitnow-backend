@@ -1,0 +1,2000 @@
+{
+	"info": {
+		"_postman_id": "15474628-8900fd5c-078b-4a6f-9d64-65721f99d9f6",
+		"name": "FixItNow API",
+		"description": "Home Services Marketplace Backend API - Complete Collection with Admin Profile",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register Customer",
+					"id": "15474628-b7d33658-51ee-425d-82de-d91368ed783c",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Customer\",\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"01700000000\",\n  \"role\": \"CUSTOMER\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register Technician",
+					"id": "15474628-03bb09da-165a-4708-81dd-19ce37a4088b",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Jane Technician\",\n  \"email\": \"technician@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"01800000000\",\n  \"role\": \"TECHNICIAN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register Admin",
+					"id": "15474628-3b716f01-4431-49e6-817d-196db968a637",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123456\",\n  \"phone\": \"01900000000\",\n  \"role\": \"ADMIN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json?.data?.token) {",
+									"    pm.collectionVariables.set('customerToken', json.data.token);",
+									"    pm.collectionVariables.set('userId', json.data.user.id);",
+									"    console.log('✅ Customer token saved');",
+									"    console.log('✅ User ID saved:', json.data.user.id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"id": "ae5d97a1-4fd8-498c-adbf-200933aac04e"
+							}
+						}
+					],
+					"id": "15474628-7d0c88b5-0c50-4f96-b1e6-34ae7afedf75",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Technician",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json?.data?.token) {",
+									"    pm.collectionVariables.set('technicianToken', json.data.token);",
+									"    pm.collectionVariables.set('technicianId', json.data.user.id);",
+									"    console.log('✅ Technician token saved');",
+									"    console.log('✅ Technician ID saved:', json.data.user.id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"id": "d5acea3c-6b62-4025-a9cb-0407f0397446"
+							}
+						}
+					],
+					"id": "15474628-2d9b4b4d-84e7-4a9f-bcb7-9461078ebefa",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"technician@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json?.data?.token) {",
+									"    pm.collectionVariables.set('adminToken', json.data.token);",
+									"    console.log('✅ Admin token saved');",
+									"}"
+								],
+								"type": "text/javascript",
+								"id": "aad1a5df-046a-43e2-9a26-1dd9fc31ee6a"
+							}
+						}
+					],
+					"id": "15474628-e18c6bd4-621e-46f2-888b-5f9fadfc50fa",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User (Me)",
+					"id": "15474628-3ce3c37b-8b55-4fac-af61-98f35b9a6f53",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-320f8e3f-1469-44bb-93c2-1d1a6c4c1ee9"
+		},
+		{
+			"name": "Admin Profile Module",
+			"item": [
+				{
+					"name": "Get My Admin Profile",
+					"id": "15474628-92ef52eb-f059-45f8-8d5f-1474e66188a3",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin-profile/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin-profile",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update My Admin Profile",
+					"id": "15474628-b75dfe1f-3b84-4474-ae7f-58a4765b3889",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"department\": \"IT\",\n  \"position\": \"Senior Administrator\",\n  \"permissions\": [\"manage_users\", \"manage_bookings\", \"manage_categories\"],\n  \"isSuperAdmin\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin-profile/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin-profile",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-4a9b520d-49ad-4513-bb82-39458dd08528"
+		},
+		{
+			"name": "Customer Module",
+			"item": [
+				{
+					"name": "Get My Customer Profile",
+					"id": "15474628-75d617cd-d5b0-4b84-b64e-bf7a22522965",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/customer/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"customer",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update My Customer Profile",
+					"id": "15474628-658d4710-3606-4cb7-be51-71d9187d4a9f",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Customer\",\n  \"phone\": \"+9876543210\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"Dhaka\",\n  \"postalCode\": \"1200\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/customer/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"customer",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Customer Bookings",
+					"id": "15474628-cf00eb94-7a96-4b34-8fc6-704af7d7ad95",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/customer/bookings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"customer",
+								"bookings"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-405cc6c1-d278-4538-b5c9-0f226843104f"
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Get All Categories (Public)",
+					"id": "15474628-ea9829c2-1b31-4a41-b0e3-5aeafa9b5106",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category by ID",
+					"id": "15474628-9c1e496c-a6cd-4fb7-961f-b9bafb1065fa",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"{{categoryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin - Create Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json?.data?.id) {",
+									"    pm.collectionVariables.set('categoryId', json.data.id);",
+									"    console.log('✅ Category created, ID saved:', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"id": "b0c79227-dfa8-4f52-a58c-75f2799a15e9"
+							}
+						}
+					],
+					"id": "15474628-9d7d28d3-44d6-4572-84a8-812447622d95",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Plumbing\",\n  \"description\": \"Pipe, faucet and drainage services\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin - Update Category",
+					"id": "15474628-55869494-8f10-48ec-b466-ccdb5aea8a52",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Plumbing Services\",\n  \"description\": \"Professional plumbing services\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"{{categoryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin - Delete Category",
+					"id": "15474628-4c8492e4-3792-421b-b3ed-32c58bbc54fb",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"{{categoryId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-527421de-a33d-4c0c-be5f-d169b1cc6857"
+		},
+		{
+			"name": "Services",
+			"item": [
+				{
+					"name": "Get All Services (with filters)",
+					"id": "15474628-4840013b-6544-4d16-84f4-5cef132f5415",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/services?categoryId={{categoryId}}&minPrice=10&maxPrice=500",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"services"
+							],
+							"query": [
+								{
+									"key": "categoryId",
+									"value": "{{categoryId}}"
+								},
+								{
+									"key": "minPrice",
+									"value": "10"
+								},
+								{
+									"key": "maxPrice",
+									"value": "500"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Service by ID",
+					"id": "15474628-c1f312c7-f9f1-49ea-8937-a0a3b8d56b95",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/services/{{serviceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"services",
+								"{{serviceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Technician - Create Service",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json?.data?.id) {",
+									"    pm.collectionVariables.set('serviceId', json.data.id);",
+									"    console.log('✅ Service created, ID saved:', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"id": "4d4d741f-418c-47bd-bf93-fe71be11e19f"
+							}
+						}
+					],
+					"id": "15474628-9ce36f14-4aa9-4b0a-a9fd-f21e3bcd3575",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"title\": \"Leak Repair\",\n  \"description\": \"Fix leaking pipes and faucets\",\n  \"price\": 45,\n  \"durationMins\": 60\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/services",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"services"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Technician - Get My Services",
+					"id": "15474628-d4a12282-72d5-46ce-9074-028f442dfd68",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/services/my",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"services",
+								"my"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Service (Technician or Admin)",
+					"id": "15474628-d88f2fd5-a9b6-45c4-b47a-52fcddcb99d9",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Professional Leak Repair\",\n  \"price\": 50,\n  \"description\": \"Expert leak repair service\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/services/{{serviceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"services",
+								"{{serviceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Service (Technician or Admin)",
+					"id": "15474628-cf858f60-0858-49d9-957c-3b289dba7892",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/services/{{serviceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"services",
+								"{{serviceId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-9531118b-bc65-4569-84e7-9ea04bf47dd4"
+		},
+		{
+			"name": "Technicians (Public)",
+			"item": [
+				{
+					"name": "Get All Technicians",
+					"id": "15474628-36ad47f7-0d74-4e47-9fc4-f30e17695e99",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/technicians?location=Dhaka",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"technicians"
+							],
+							"query": [
+								{
+									"key": "location",
+									"value": "Dhaka"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Technician Profile by ID",
+					"id": "15474628-5f579fe7-472f-4eed-947d-f03f29588d74",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/technicians/{{technicianId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"technicians",
+								"{{technicianId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-98f91ff4-0731-45d9-868d-18889d278331"
+		},
+		{
+			"name": "Technician Management",
+			"item": [
+				{
+					"name": "Get My Technician Profile",
+					"id": "15474628-4ab8c4f0-6d39-4ae7-9334-d7fd046a2d54",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/technicians/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"technicians",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Technician Profile",
+					"id": "15474628-69ccb2dc-a35b-42dc-9adc-b22edb6fd689",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bio\": \"10 years of plumbing experience\",\n  \"experienceYrs\": 10,\n  \"location\": \"Dhaka\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/technicians/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"technicians",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Availability Slot",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json?.data?.id) {",
+									"    pm.collectionVariables.set('availabilityId', json.data.id);",
+									"    console.log('✅ Availability slot created, ID saved:', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"id": "e73a32d3-9003-4d20-ae44-a8949263e35b"
+							}
+						}
+					],
+					"id": "15474628-00499384-889f-452e-9d2d-e5b0b40d606c",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"dayOfWeek\": 1,\n  \"startTime\": \"09:00\",\n  \"endTime\": \"17:00\",\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/technicians/availability",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"technicians",
+								"availability"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Availability Slots",
+					"id": "15474628-f752b550-7a26-46de-a940-591680701797",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/technicians/availability",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"technicians",
+								"availability"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Availability Slot",
+					"id": "15474628-9a4772e2-8d34-40ef-b723-941061390931",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/technicians/availability/{{availabilityId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"technicians",
+								"availability",
+								"{{availabilityId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-24d8c71f-1fac-46ad-ae55-7272402cbe10"
+		},
+		{
+			"name": "Bookings (Customer)",
+			"item": [
+				{
+					"name": "Create Booking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json?.data?.id) {",
+									"    pm.collectionVariables.set('bookingId', json.data.id);",
+									"    console.log('✅ Booking created, ID saved:', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"id": "0c924a12-372c-426c-adb8-48634434e5cb"
+							}
+						}
+					],
+					"id": "15474628-a7953952-53af-4142-abe1-a4f3b5ea2883",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"scheduledAt\": \"2026-08-01T09:00:00.000Z\",\n  \"notes\": \"Please bring all necessary tools\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bookings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Bookings (Customer)",
+					"id": "15474628-0a2795c4-9edf-43e2-93c2-55d21b706bdf",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/bookings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Booking by ID",
+					"id": "15474628-8884f269-c629-482b-a667-83b9d8ac6b17",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/bookings/{{bookingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings",
+								"{{bookingId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Booking (Customer)",
+					"id": "15474628-d9786379-e51f-4d9e-837b-e9a91f9996a9",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/bookings/{{bookingId}}/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings",
+								"{{bookingId}}",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-02aa0e0e-8379-4d7b-b591-3933d9b600cc"
+		},
+		{
+			"name": "Bookings (Technician)",
+			"item": [
+				{
+					"name": "Get My Bookings (Technician)",
+					"id": "15474628-aeadc8a1-5b11-4e86-a634-bd6f313e0292",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/bookings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Booking Status - ACCEPTED",
+					"id": "15474628-11b06425-0608-4bc6-94e6-b0b7cc5af7b6",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bookings/{{bookingId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings",
+								"{{bookingId}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Booking Status - IN_PROGRESS",
+					"id": "15474628-c4416733-0012-482d-bd1a-dcc158efe432",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bookings/{{bookingId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings",
+								"{{bookingId}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Booking Status - COMPLETED",
+					"id": "15474628-2493beb3-d827-4e1e-b5cd-175627a6bba6",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"COMPLETED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bookings/{{bookingId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings",
+								"{{bookingId}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Booking Status - DECLINED",
+					"id": "15474628-183515ee-91f4-44e5-aa79-a5e9c86ce20a",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"DECLINED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bookings/{{bookingId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings",
+								"{{bookingId}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-be1c0e9a-9f24-474c-a955-f66d38dfe5eb"
+		},
+		{
+			"name": "Bookings (Admin)",
+			"item": [
+				{
+					"name": "Get All Bookings (Admin)",
+					"id": "15474628-856f3734-c0b9-4af8-83bb-900894fd0b23",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/bookings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Booking by ID (Admin)",
+					"id": "15474628-c5735835-eb47-42c1-801c-22fc82b58396",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/bookings/{{bookingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings",
+								"{{bookingId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Booking Status (Admin)",
+					"id": "15474628-a9347345-0fbd-4977-b432-6a0e8f1d9bec",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"COMPLETED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bookings/{{bookingId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings",
+								"{{bookingId}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-ccd31632-3bc7-4891-9943-06121a9f6bd1"
+		},
+		{
+			"name": "Payments (Stripe)",
+			"item": [
+				{
+					"name": "Create Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json?.data?.paymentIntentId) {",
+									"    pm.collectionVariables.set('paymentSessionId', json.data.paymentIntentId);",
+									"    console.log('✅ Payment intent created, ID saved:', json.data.paymentIntentId);",
+									"}"
+								],
+								"type": "text/javascript",
+								"id": "df307a62-e15d-40c0-8d6b-fb996a32578e"
+							}
+						}
+					],
+					"id": "15474628-4b5b4ed3-ff14-403b-8d45-98d3337b9282",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bookingId\": \"{{bookingId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Confirm Payment",
+					"id": "15474628-ccc70de0-fff2-4674-a2fd-14546e457aca",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"paymentIntentId\": \"{{paymentSessionId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/confirm",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"confirm"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Payment History",
+					"id": "15474628-46519b6d-e9fd-4bdd-8145-44b964db6547",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment by ID",
+					"id": "15474628-d03ca9ef-5a65-403c-94d0-7fafb07818ca",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments/{{paymentSessionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"{{paymentSessionId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-2481239b-be67-4dca-b3ea-cdf9af7faf4c"
+		},
+		{
+			"name": "Reviews",
+			"item": [
+				{
+					"name": "Create Review",
+					"id": "15474628-28fbdbf8-7368-43ac-9ff4-0133de395621",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"rating\": 5,\n  \"comment\": \"Excellent and professional service!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/reviews",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reviews"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Technician Reviews (Public)",
+					"id": "15474628-bf99abc1-1ca1-4e2b-a4fc-9a1484b52fc4",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reviews/technician/{{technicianId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reviews",
+								"technician",
+								"{{technicianId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Reviews (Technician)",
+					"id": "15474628-22b9eefd-9555-40d1-8687-e9a4406ad121",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{technicianToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/reviews/my",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reviews",
+								"my"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-6e8f63d7-dc53-4ef2-be2c-2857419d43cd"
+		},
+		{
+			"name": "Users (Admin & Self)",
+			"item": [
+				{
+					"name": "Get All Users (Admin Only)",
+					"id": "15474628-7e527fa4-f8ef-4830-949c-15179d08af6b",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"id": "15474628-3284d394-b5a9-4984-bd0a-7d483f94e802",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Profile (Self)",
+					"id": "15474628-f834e66a-dc5a-4dd9-b393-01748651c501",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customerToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"+9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ban/Unban User (Admin Only)",
+					"id": "15474628-3b0c1715-7da4-4043-98e8-70a8cd13f1ee",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"BANNED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User (Admin Only)",
+					"id": "15474628-a75fc293-847e-42ee-9e0a-814e7fc869e6",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Stats (Admin Only)",
+					"id": "15474628-e0c1de3c-6f47-4006-bc53-b87c6e5c945e",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-74abdd43-6248-44cd-80f1-ebc45577c10d"
+		},
+		{
+			"name": "Admin Dashboard",
+			"item": [
+				{
+					"name": "Get All Users (Admin)",
+					"id": "15474628-fefd06bf-3b20-46a2-87e5-d4510f768c53",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Bookings (Admin)",
+					"id": "15474628-d8bb9a38-5deb-4d3c-8e7b-ed31c2e76dbc",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/bookings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"bookings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Stats (Admin)",
+					"id": "15474628-ddb2be41-0b88-4589-903e-3ec88cd339c7",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "15474628-3079f4f9-cebe-4b5e-8422-350133919cca"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api"
+		},
+		{
+			"key": "customerToken",
+			"value": ""
+		},
+		{
+			"key": "technicianToken",
+			"value": ""
+		},
+		{
+			"key": "adminToken",
+			"value": ""
+		},
+		{
+			"key": "categoryId",
+			"value": ""
+		},
+		{
+			"key": "serviceId",
+			"value": ""
+		},
+		{
+			"key": "availabilityId",
+			"value": ""
+		},
+		{
+			"key": "bookingId",
+			"value": ""
+		},
+		{
+			"key": "paymentSessionId",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "technicianId",
+			"value": ""
+		}
+	]
+}
