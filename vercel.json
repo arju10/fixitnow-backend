@@ -1,9 +1,9 @@
 {
   "version": 2,
-    "rewrites": [
+"rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/dist/app.js"
+      "destination": "/api"
     }
   ],
   "builds": [
