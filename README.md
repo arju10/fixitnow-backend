@@ -1,5 +1,5 @@
 # 📚 FixItNow Backend API - Complete Documentation
-
+ ## Postman Collection: https://www.postman.com/speeding-eclipse-199364/fixitnow-backend/collection/15474628-1c7e96c9-2c3a-41a2-8ad5-7649f536c7c7?action=share&source=copy-link&creator=15474628
 ---
 
 ## 📋 Table of Contents
@@ -219,7 +219,6 @@ fixitnow-backend/
 │   └── seed.ts                   # Seed data
 ├── prisma/
 │   ├── schema.prisma             # Database schema
-│   └── seed.ts                   # Seed data (Here should be seed file, But I failed to create here. So, here is no seed file)
 ├── .env                          # Environment variables
 ├── package.json
 ├── tsconfig.json
@@ -230,7 +229,7 @@ fixitnow-backend/
 
 ## 🗄️ Database Schema
 
-### ER Diagram
+<!-- ### ER Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -296,7 +295,7 @@ fixitnow-backend/
 │       │      └────────────────────┘                                         │  │
 │       │                                                                     │  │
 └───────┴─────────────────────────────────────────────────────────────────────┘
-```
+``` -->
 
 ### Enums
 
