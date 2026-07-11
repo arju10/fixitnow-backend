@@ -32,6 +32,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Health check
+app.get('/', (req: Request, res: Response) => {
+  sendResponse(res, 200, 'Hi! I am Running', {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Health check
 app.get('/health', (req: Request, res: Response) => {
   sendResponse(res, 200, 'Server is healthy', {
     status: 'OK',

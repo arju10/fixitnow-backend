@@ -216,9 +216,10 @@ fixitnow-backend/
 │   │   └── jwt.ts                # JWT utilities
 │   ├── app.ts                    # Express app
 │   └── server.ts                 # Server entry
+│   └── seed.ts                   # Seed data
 ├── prisma/
 │   ├── schema.prisma             # Database schema
-│   └── seed.ts                   # Seed data
+│   └── seed.ts                   # Seed data (Here should be seed file, But I failed to create here. So, here is no seed file)
 ├── .env                          # Environment variables
 ├── package.json
 ├── tsconfig.json
