@@ -178,6 +178,9 @@ export const createNewService = async (technicianId: string, input: CreateServic
 };
 
 export const updateSingleService = async (serviceId: string, input: UpdateServiceInput) => {
+  console.log('🔍 Updating service:', serviceId);
+  console.log('📦 Input data:', JSON.stringify(input, null, 2));
+
   await getSingleService(serviceId);
 
   if (input.categoryId) {
@@ -196,9 +199,14 @@ export const updateSingleService = async (serviceId: string, input: UpdateServic
   if (input.price !== undefined) data.price = input.price;
   if (input.durationMins !== undefined) data.durationMins = input.durationMins;
   if (input.categoryId !== undefined) data.categoryId = input.categoryId;
-  if (input.isActive !== undefined) data.isActive = input.isActive; // ✅ CRITICAL FIX
+  if (input.isActive !== undefined) {
+    data.isActive = input.isActive;
+    console.log('✅ Setting isActive to:', input.isActive);
+  }
 
-  return prisma.service.update({
+  console.log('📦 Final data:', JSON.stringify(data, null, 2));
+
+  const result = await prisma.service.update({
     where: { id: serviceId },
     data,
     include: {
@@ -222,6 +230,9 @@ export const updateSingleService = async (serviceId: string, input: UpdateServic
       },
     },
   });
+
+  console.log('✅ Updated service:', result.id, 'isActive:', result.isActive);
+  return result;
 };
 
 export const deleteSingleService = async (serviceId: string) => {

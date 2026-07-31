@@ -1062,7 +1062,8 @@ var createNewService = async (technicianId, input) => {
     title: input.title,
     price: input.price,
     categoryId: input.categoryId,
-    technicianId: technician.id
+    technicianId: technician.id,
+    isActive: true
   };
   if (input.description !== void 0) {
     data.description = input.description || null;
@@ -1095,6 +1096,8 @@ var createNewService = async (technicianId, input) => {
   });
 };
 var updateSingleService = async (serviceId, input) => {
+  console.log("\u{1F50D} Updating service:", serviceId);
+  console.log("\u{1F4E6} Input data:", JSON.stringify(input, null, 2));
   await getSingleService(serviceId);
   if (input.categoryId) {
     const category = await prisma.category.findUnique({
@@ -1110,7 +1113,12 @@ var updateSingleService = async (serviceId, input) => {
   if (input.price !== void 0) data.price = input.price;
   if (input.durationMins !== void 0) data.durationMins = input.durationMins;
   if (input.categoryId !== void 0) data.categoryId = input.categoryId;
-  return prisma.service.update({
+  if (input.isActive !== void 0) {
+    data.isActive = input.isActive;
+    console.log("\u2705 Setting isActive to:", input.isActive);
+  }
+  console.log("\u{1F4E6} Final data:", JSON.stringify(data, null, 2));
+  const result = await prisma.service.update({
     where: { id: serviceId },
     data,
     include: {
@@ -1134,6 +1142,8 @@ var updateSingleService = async (serviceId, input) => {
       }
     }
   });
+  console.log("\u2705 Updated service:", result.id, "isActive:", result.isActive);
+  return result;
 };
 var deleteSingleService = async (serviceId) => {
   await getSingleService(serviceId);
