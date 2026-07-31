@@ -1,6 +1,6 @@
 import { prisma } from '../../lib/prisma';
 import { ApiError } from '../../utils/ApiError';
-import { stripe } from '../../lib/stripe'; // ✅ Fixed import path
+import { stripe } from '../../lib/stripe';
 import type { CreatePaymentInput } from './payments.validation';
 import { PaymentStatus, BookingStatus } from '@prisma/client';
 
@@ -53,7 +53,7 @@ export const createPayment = async (userId: string, input: CreatePaymentInput) =
   const transactionId = `FIX-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
   // 6. Create payment intent based on provider
-  let providerTransactionId: string;
+  let providerId: string | null = null;
 
   if (provider === 'STRIPE') {
     try {
@@ -68,15 +68,15 @@ export const createPayment = async (userId: string, input: CreatePaymentInput) =
         },
         description: `Payment for booking ${booking.id}`,
       });
-      providerTransactionId = paymentIntent.id;
+      providerId = paymentIntent.id;
     } catch (error) {
       console.error('Stripe error:', error);
       throw new ApiError(500, 'Failed to create Stripe payment intent');
     }
   } else {
     // SSLCommerz - For now, we'll simulate it
-    providerTransactionId = `SSLC_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    console.log('💰 SSLCommerz payment simulated:', providerTransactionId);
+    providerId = `SSLC_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    console.log('💰 SSLCommerz payment simulated:', providerId);
   }
 
   // 7. Create payment record
@@ -88,7 +88,7 @@ export const createPayment = async (userId: string, input: CreatePaymentInput) =
       amount: booking.totalAmount,
       method: 'card',
       provider,
-      providerTransactionId,
+      providerId, // ✅ Use providerId instead of providerTransactionId
       status: PaymentStatus.PENDING,
     },
     include: {
@@ -124,7 +124,7 @@ export const createPayment = async (userId: string, input: CreatePaymentInput) =
   if (provider === 'STRIPE') {
     return {
       ...newPayment,
-      clientSecret: providerTransactionId, // In real implementation, you'd get this from Stripe
+      clientSecret: providerId, // In real implementation, you'd get this from Stripe
     };
   }
 
@@ -349,7 +349,7 @@ export const refundPayment = async (paymentId: string, userId: string, userRole:
   }
 
   // In production, you would call Stripe refund API here
-  // await stripe.refunds.create({ payment_intent: payment.providerTransactionId });
+  // await stripe.refunds.create({ payment_intent: payment.providerId });
 
   const updatedPayment = await prisma.$transaction(async (tx) => {
     const updated = await tx.payment.update({

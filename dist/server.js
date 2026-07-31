@@ -2571,7 +2571,7 @@ var createPayment = async (userId, input) => {
     throw new ApiError(409, "Payment already exists for this booking");
   }
   const transactionId = `FIX-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-  let providerTransactionId;
+  let providerId = null;
   if (provider === "STRIPE") {
     try {
       const paymentIntent = await stripe.paymentIntents.create({
@@ -2586,14 +2586,14 @@ var createPayment = async (userId, input) => {
         },
         description: `Payment for booking ${booking.id}`
       });
-      providerTransactionId = paymentIntent.id;
+      providerId = paymentIntent.id;
     } catch (error) {
       console.error("Stripe error:", error);
       throw new ApiError(500, "Failed to create Stripe payment intent");
     }
   } else {
-    providerTransactionId = `SSLC_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    console.log("\u{1F4B0} SSLCommerz payment simulated:", providerTransactionId);
+    providerId = `SSLC_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    console.log("\u{1F4B0} SSLCommerz payment simulated:", providerId);
   }
   const newPayment = await prisma.payment.create({
     data: {
@@ -2603,7 +2603,8 @@ var createPayment = async (userId, input) => {
       amount: booking.totalAmount,
       method: "card",
       provider,
-      providerTransactionId,
+      providerId,
+      // ✅ Use providerId instead of providerTransactionId
       status: PaymentStatus.PENDING
     },
     include: {
@@ -2636,7 +2637,7 @@ var createPayment = async (userId, input) => {
   if (provider === "STRIPE") {
     return {
       ...newPayment,
-      clientSecret: providerTransactionId
+      clientSecret: providerId
       // In real implementation, you'd get this from Stripe
     };
   }

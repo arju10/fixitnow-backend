@@ -227,6 +227,7 @@ model Payment {
   amount        Float
   method        String          @default("card")
   provider      PaymentProvider @default(STRIPE)
+  providerId    String?         // ✅ Renamed from providerTransactionId
   status        PaymentStatus   @default(PENDING)
   paidAt        DateTime?
   createdAt     DateTime        @default(now())
