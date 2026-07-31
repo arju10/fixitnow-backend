@@ -6,6 +6,7 @@ import {
   updateMyProfileController,
   addAvailabilitySlotController,
   getMyAvailabilitySlotsController,
+  updateAvailabilitySlotController,
   removeAvailabilitySlotController,
 } from './technicians.controller';
 import { protect, restrictTo } from '../../middleware/auth.middleware';
@@ -13,6 +14,7 @@ import { validate } from '../../middleware/validate.middleware';
 import {
   updateTechnicianProfileSchema,
   createAvailabilitySlotSchema,
+  updateAvailabilitySlotSchema,
 } from './technicians.validation';
 
 const router = Router();
@@ -33,13 +35,19 @@ router.put(
 );
 
 // Availability slots (Technician only)
+router.get('/availability', restrictTo('TECHNICIAN'), getMyAvailabilitySlotsController);
 router.post(
   '/availability',
   restrictTo('TECHNICIAN'),
   validate(createAvailabilitySlotSchema),
   addAvailabilitySlotController
 );
-router.get('/availability', restrictTo('TECHNICIAN'), getMyAvailabilitySlotsController);
+router.put(
+  '/availability/:id',
+  restrictTo('TECHNICIAN'),
+  validate(updateAvailabilitySlotSchema),
+  updateAvailabilitySlotController
+);
 router.delete('/availability/:id', restrictTo('TECHNICIAN'), removeAvailabilitySlotController);
 
 export default router;

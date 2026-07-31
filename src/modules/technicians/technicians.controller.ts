@@ -8,11 +8,13 @@ import {
   updateTechnicianProfile,
   addAvailabilitySlot,
   getAvailabilitySlots,
+  updateAvailabilitySlot,
   removeAvailabilitySlot,
 } from './technicians.service';
 import type {
   UpdateTechnicianProfileInput,
   CreateAvailabilitySlotInput,
+  UpdateAvailabilitySlotInput,
 } from './technicians.validation';
 
 export const getMyProfileController = catchAsync(async (req: Request, res: Response) => {
@@ -69,6 +71,21 @@ export const getMyAvailabilitySlotsController = catchAsync(async (req: Request, 
 
   const slots = await getAvailabilitySlots(req.user.id);
   sendResponse(res, 200, 'Availability slots fetched successfully', slots);
+});
+
+export const updateAvailabilitySlotController = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(401, 'User not authenticated');
+  }
+
+  const { id } = req.params;
+  if (!id || typeof id !== 'string') {
+    throw new ApiError(400, 'Invalid slot ID');
+  }
+
+  const input = req.body as UpdateAvailabilitySlotInput;
+  const slot = await updateAvailabilitySlot(id, req.user.id, input);
+  sendResponse(res, 200, 'Availability slot updated successfully', slot);
 });
 
 export const removeAvailabilitySlotController = catchAsync(async (req: Request, res: Response) => {

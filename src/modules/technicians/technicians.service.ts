@@ -3,6 +3,7 @@ import { ApiError } from '../../utils/ApiError';
 import type {
   UpdateTechnicianProfileInput,
   CreateAvailabilitySlotInput,
+  UpdateAvailabilitySlotInput,
 } from './technicians.validation';
 
 export const getTechnicianProfile = async (userId: string) => {
@@ -88,7 +89,6 @@ export const updateTechnicianProfile = async (
   userId: string,
   input: UpdateTechnicianProfileInput
 ) => {
-  // Build update data - only include fields that are provided
   const data: any = {};
 
   if (input.bio !== undefined) {
@@ -124,6 +124,7 @@ export const updateTechnicianProfile = async (
   return profile;
 };
 
+// Add availability slot
 export const addAvailabilitySlot = async (userId: string, input: CreateAvailabilitySlotInput) => {
   const profile = await prisma.technicianProfile.findUnique({
     where: { userId },
@@ -131,6 +132,18 @@ export const addAvailabilitySlot = async (userId: string, input: CreateAvailabil
 
   if (!profile) {
     throw new ApiError(404, 'Technician profile not found');
+  }
+
+  // Check if slot already exists for this day
+  const existingSlot = await prisma.availabilitySlot.findFirst({
+    where: {
+      technicianId: profile.id,
+      dayOfWeek: input.dayOfWeek,
+    },
+  });
+
+  if (existingSlot) {
+    throw new ApiError(409, 'Availability slot already exists for this day');
   }
 
   return prisma.availabilitySlot.create({
@@ -144,6 +157,7 @@ export const addAvailabilitySlot = async (userId: string, input: CreateAvailabil
   });
 };
 
+// Get all availability slots
 export const getAvailabilitySlots = async (userId: string) => {
   const profile = await prisma.technicianProfile.findUnique({
     where: { userId },
@@ -159,6 +173,56 @@ export const getAvailabilitySlots = async (userId: string) => {
   });
 };
 
+// Update availability slot (day, time, or toggle active)
+export const updateAvailabilitySlot = async (
+  slotId: string,
+  userId: string,
+  input: UpdateAvailabilitySlotInput
+) => {
+  // Check if slot exists and belongs to the technician
+  const slot = await prisma.availabilitySlot.findUnique({
+    where: { id: slotId },
+    include: {
+      technician: true,
+    },
+  });
+
+  if (!slot) {
+    throw new ApiError(404, 'Availability slot not found');
+  }
+
+  if (slot.technician.userId !== userId) {
+    throw new ApiError(403, 'You can only update your own availability slots');
+  }
+
+  // If day is being updated, check if another slot exists for that day
+  if (input.dayOfWeek !== undefined && input.dayOfWeek !== slot.dayOfWeek) {
+    const existingSlot = await prisma.availabilitySlot.findFirst({
+      where: {
+        technicianId: slot.technicianId,
+        dayOfWeek: input.dayOfWeek,
+        id: { not: slotId },
+      },
+    });
+
+    if (existingSlot) {
+      throw new ApiError(409, 'Availability slot already exists for this day');
+    }
+  }
+
+  const data: any = {};
+  if (input.dayOfWeek !== undefined) data.dayOfWeek = input.dayOfWeek;
+  if (input.startTime !== undefined) data.startTime = input.startTime;
+  if (input.endTime !== undefined) data.endTime = input.endTime;
+  if (input.isActive !== undefined) data.isActive = input.isActive;
+
+  return prisma.availabilitySlot.update({
+    where: { id: slotId },
+    data,
+  });
+};
+
+// Remove availability slot (DELETE - kept for admin or if needed)
 export const removeAvailabilitySlot = async (slotId: string, userId: string) => {
   const slot = await prisma.availabilitySlot.findUnique({
     where: { id: slotId },

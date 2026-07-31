@@ -36,5 +36,6 @@ export interface ITechnicianService {
   updateTechnicianProfile(userId: string, input: any): Promise<ITechnicianProfileWithUser>;
   addAvailabilitySlot(userId: string, input: any): Promise<IAvailabilitySlot>;
   getAvailabilitySlots(userId: string): Promise<IAvailabilitySlot[]>;
+  updateAvailabilitySlot(slotId: string, userId: string, input: any): Promise<IAvailabilitySlot>;
   removeAvailabilitySlot(slotId: string, userId: string): Promise<void>;
 }
