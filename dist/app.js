@@ -265,6 +265,10 @@ var getMe = catchAsync(async (req, res) => {
 // src/middleware/auth.middleware.ts
 var protect = catchAsync(async (req, _res, next) => {
   const authHeader = req.headers.authorization;
+  console.log("\u{1F510} Auth Middleware - Headers:", {
+    hasAuth: !!authHeader,
+    authPreview: authHeader?.substring(0, 20) + "..."
+  });
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     throw new ApiError(401, "You are not logged in. Please provide a valid token.");
   }
@@ -272,15 +276,32 @@ var protect = catchAsync(async (req, _res, next) => {
   if (!token) {
     throw new ApiError(401, "Invalid token format.");
   }
+  console.log("\u{1F510} Auth Middleware - Token received, verifying...");
   const decoded = verifyToken(token);
-  const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+  console.log("\u{1F510} Auth Middleware - Decoded token:", decoded);
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      status: true
+    }
+  });
+  console.log("\u{1F510} Auth Middleware - Found user:", user ? "\u2705 YES" : "\u274C NO");
+  console.log("\u{1F510} Auth Middleware - User data:", user);
   if (!user) {
     throw new ApiError(401, "The user belonging to this token no longer exists.");
   }
   if (user.status === "BANNED") {
     throw new ApiError(403, "Your account has been banned. Contact support.");
   }
-  req.user = { id: user.id, role: user.role, email: user.email };
+  req.user = {
+    id: user.id,
+    role: user.role,
+    email: user.email
+  };
+  console.log("\u{1F510} Auth Middleware - \u2705 User attached to request:", req.user);
   next();
 });
 var restrictTo = (...roles) => {
@@ -288,6 +309,7 @@ var restrictTo = (...roles) => {
     if (!req.user) {
       throw new ApiError(401, "You are not logged in.");
     }
+    console.log("\u{1F510} restrictTo - User role:", req.user.role, "Allowed roles:", roles);
     if (!roles.includes(req.user.role)) {
       throw new ApiError(403, "You do not have permission to perform this action.");
     }
@@ -1300,8 +1322,17 @@ var services_route_default = router6;
 import { Router as Router7 } from "express";
 
 // src/modules/technicians/technicians.service.ts
-var getTechnicianProfile = async (userId) => {
-  const profile = await prisma.technicianProfile.findUnique({
+var getTechnicianProfileByUserId = async (userId) => {
+  console.log("\u{1F50D} [Service] Looking for technician with userId:", userId);
+  console.log("\u{1F50D} [Service] userId type:", typeof userId);
+  console.log("\u{1F50D} [Service] userId length:", userId?.length);
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, role: true }
+  });
+  console.log("\u{1F50D} [Service] User exists:", user ? "\u2705 YES" : "\u274C NO");
+  console.log("\u{1F50D} [Service] User data:", user);
+  const profile = await prisma.technicianProfile.findFirst({
     where: { userId },
     include: {
       user: {
@@ -1335,6 +1366,58 @@ var getTechnicianProfile = async (userId) => {
       }
     }
   });
+  console.log("\u{1F50D} [Service] Found profile:", profile ? "\u2705 YES" : "\u274C NO");
+  if (profile) {
+    console.log("\u{1F50D} [Service] Profile ID:", profile.id);
+    console.log("\u{1F50D} [Service] Profile userId:", profile.userId);
+  } else {
+    const allProfiles = await prisma.technicianProfile.findMany({
+      select: { id: true, userId: true }
+    });
+    console.log("\u{1F50D} [Service] All technician profiles in DB:", allProfiles);
+  }
+  if (!profile) {
+    throw new ApiError(404, "Technician profile not found");
+  }
+  return profile;
+};
+var getTechnicianProfileByProfileId = async (profileId) => {
+  console.log("\u{1F50D} [Service] Looking for technician with profileId:", profileId);
+  const profile = await prisma.technicianProfile.findUnique({
+    where: { id: profileId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          profileImage: true
+        }
+      },
+      services: {
+        include: {
+          category: true
+        }
+      },
+      availability: true,
+      reviews: {
+        include: {
+          customer: {
+            select: {
+              id: true,
+              name: true,
+              profileImage: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: "desc"
+        }
+      }
+    }
+  });
+  console.log("\u{1F50D} [Service] Found profile:", profile ? "\u2705 YES" : "\u274C NO");
   if (!profile) {
     throw new ApiError(404, "Technician profile not found");
   }
@@ -1348,7 +1431,7 @@ var getAllTechnicians = async (filters) => {
       mode: "insensitive"
     };
   }
-  return prisma.technicianProfile.findMany({
+  const profiles = await prisma.technicianProfile.findMany({
     where,
     include: {
       user: {
@@ -1372,20 +1455,30 @@ var getAllTechnicians = async (filters) => {
       }
     }
   });
+  return profiles.map((profile) => ({
+    ...profile,
+    avgRating: profile.reviews.length > 0 ? profile.reviews.reduce((sum, r) => sum + r.rating, 0) / profile.reviews.length : 0,
+    totalReviews: profile.reviews.length
+  }));
 };
 var updateTechnicianProfile = async (userId, input) => {
+  console.log("\u{1F50D} [Service] Updating technician with userId:", userId);
+  const existingProfile = await prisma.technicianProfile.findFirst({
+    where: { userId }
+  });
+  console.log("\u{1F50D} [Service] Existing profile:", existingProfile ? "\u2705 YES" : "\u274C NO");
+  if (existingProfile) {
+    console.log("\u{1F50D} [Service] Existing profile ID:", existingProfile.id);
+  }
+  if (!existingProfile) {
+    throw new ApiError(404, "Technician profile not found");
+  }
   const data = {};
-  if (input.bio !== void 0) {
-    data.bio = input.bio || null;
-  }
-  if (input.experienceYrs !== void 0) {
-    data.experienceYrs = input.experienceYrs;
-  }
-  if (input.location !== void 0) {
-    data.location = input.location || null;
-  }
+  if (input.bio !== void 0) data.bio = input.bio || null;
+  if (input.experienceYrs !== void 0) data.experienceYrs = input.experienceYrs;
+  if (input.location !== void 0) data.location = input.location || null;
   const profile = await prisma.technicianProfile.update({
-    where: { userId },
+    where: { id: existingProfile.id },
     data,
     include: {
       user: {
@@ -1397,18 +1490,33 @@ var updateTechnicianProfile = async (userId, input) => {
           profileImage: true
         }
       },
-      services: true,
+      services: {
+        include: {
+          category: true
+        }
+      },
       availability: true
     }
   });
   return profile;
 };
 var addAvailabilitySlot = async (userId, input) => {
-  const profile = await prisma.technicianProfile.findUnique({
+  console.log("\u{1F50D} [Service] Adding availability slot for userId:", userId);
+  const profile = await prisma.technicianProfile.findFirst({
     where: { userId }
   });
+  console.log("\u{1F50D} [Service] Found profile:", profile ? "\u2705 YES" : "\u274C NO");
   if (!profile) {
     throw new ApiError(404, "Technician profile not found");
+  }
+  const existingSlot = await prisma.availabilitySlot.findFirst({
+    where: {
+      technicianId: profile.id,
+      dayOfWeek: input.dayOfWeek
+    }
+  });
+  if (existingSlot) {
+    throw new ApiError(409, "Availability slot already exists for this day");
   }
   return prisma.availabilitySlot.create({
     data: {
@@ -1421,29 +1529,86 @@ var addAvailabilitySlot = async (userId, input) => {
   });
 };
 var getAvailabilitySlots = async (userId) => {
-  const profile = await prisma.technicianProfile.findUnique({
+  console.log("\u{1F50D} [Service] Getting availability slots for userId:", userId);
+  console.log("\u{1F50D} [Service] userId type:", typeof userId);
+  console.log("\u{1F50D} [Service] userId length:", userId?.length);
+  const profile = await prisma.technicianProfile.findFirst({
     where: { userId }
   });
+  console.log("\u{1F50D} [Service] Found profile:", profile ? "\u2705 YES" : "\u274C NO");
+  if (profile) {
+    console.log("\u{1F50D} [Service] Profile ID:", profile.id);
+    console.log("\u{1F50D} [Service] Profile userId:", profile.userId);
+  }
   if (!profile) {
     throw new ApiError(404, "Technician profile not found");
   }
-  return prisma.availabilitySlot.findMany({
+  const slots = await prisma.availabilitySlot.findMany({
     where: { technicianId: profile.id },
     orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }]
   });
+  console.log("\u{1F50D} [Service] Found slots:", slots.length);
+  return slots;
 };
-var removeAvailabilitySlot = async (slotId, userId) => {
-  const slot = await prisma.availabilitySlot.findUnique({
-    where: { id: slotId },
-    include: {
-      technician: true
+var updateAvailabilitySlot = async (slotId, userId, input) => {
+  console.log("\u{1F50D} [Service] Updating availability slot:", slotId, "for userId:", userId);
+  const profile = await prisma.technicianProfile.findFirst({
+    where: { userId }
+  });
+  console.log("\u{1F50D} [Service] Found profile:", profile ? "\u2705 YES" : "\u274C NO");
+  if (!profile) {
+    throw new ApiError(404, "Technician profile not found");
+  }
+  const slot = await prisma.availabilitySlot.findFirst({
+    where: {
+      id: slotId,
+      technicianId: profile.id
     }
   });
+  console.log("\u{1F50D} [Service] Found slot:", slot ? "\u2705 YES" : "\u274C NO");
   if (!slot) {
-    throw new ApiError(404, "Availability slot not found");
+    throw new ApiError(404, "Availability slot not found or does not belong to you");
   }
-  if (slot.technician.userId !== userId) {
-    throw new ApiError(403, "You can only delete your own availability slots");
+  if (input.dayOfWeek !== void 0 && input.dayOfWeek !== slot.dayOfWeek) {
+    const existingSlot = await prisma.availabilitySlot.findFirst({
+      where: {
+        technicianId: profile.id,
+        dayOfWeek: input.dayOfWeek,
+        id: { not: slotId }
+      }
+    });
+    if (existingSlot) {
+      throw new ApiError(409, "Availability slot already exists for this day");
+    }
+  }
+  const data = {};
+  if (input.dayOfWeek !== void 0) data.dayOfWeek = input.dayOfWeek;
+  if (input.startTime !== void 0) data.startTime = input.startTime;
+  if (input.endTime !== void 0) data.endTime = input.endTime;
+  if (input.isActive !== void 0) data.isActive = input.isActive;
+  return prisma.availabilitySlot.update({
+    where: { id: slotId },
+    data
+  });
+};
+var removeAvailabilitySlot = async (slotId, userId) => {
+  console.log("\u{1F50D} [Service] Removing availability slot:", slotId, "for userId:", userId);
+  const profile = await prisma.technicianProfile.findFirst({
+    where: { userId }
+  });
+  console.log("\u{1F50D} [Service] Found profile:", profile ? "\u2705 YES" : "\u274C NO");
+  if (!profile) {
+    throw new ApiError(404, "Technician profile not found");
+  }
+  const slot = await prisma.availabilitySlot.findFirst({
+    where: {
+      id: slotId,
+      technicianId: profile.id
+    }
+  });
+  console.log("\u{1F50D} [Service] Found slot:", slot ? "\u2705 YES" : "\u274C NO");
+  if (!slot) {
+    throw new ApiError(404, "Availability slot not found or does not belong to you");
   }
   await prisma.availabilitySlot.delete({
     where: { id: slotId }
@@ -1455,10 +1620,12 @@ var getMyProfileController = catchAsync(async (req, res) => {
   if (!req.user) {
     throw new ApiError(401, "User not authenticated");
   }
-  const profile = await getTechnicianProfile(req.user.id);
+  console.log("\u{1F4CD} getMyProfileController - userId:", req.user.id);
+  const profile = await getTechnicianProfileByUserId(req.user.id);
   sendResponse(res, 200, "Technician profile fetched successfully", profile);
 });
 var getAllTechniciansController = catchAsync(async (req, res) => {
+  console.log("\u{1F4CD} getAllTechniciansController called");
   const { location } = req.query;
   const filters = {
     location
@@ -1468,40 +1635,58 @@ var getAllTechniciansController = catchAsync(async (req, res) => {
 });
 var getTechnicianByIdController = catchAsync(async (req, res) => {
   const { id } = req.params;
+  console.log("\u{1F4CD} getTechnicianByIdController - id:", id);
   if (!id || typeof id !== "string") {
     throw new ApiError(400, "Invalid technician ID");
   }
-  const profile = await getTechnicianProfile(id);
+  const profile = await getTechnicianProfileByProfileId(id);
   sendResponse(res, 200, "Technician profile fetched successfully", profile);
 });
 var updateMyProfileController = catchAsync(async (req, res) => {
   if (!req.user) {
     throw new ApiError(401, "User not authenticated");
   }
+  console.log("\u{1F4CD} updateMyProfileController - userId:", req.user.id);
   const input = req.body;
   const profile = await updateTechnicianProfile(req.user.id, input);
   sendResponse(res, 200, "Technician profile updated successfully", profile);
-});
-var addAvailabilitySlotController = catchAsync(async (req, res) => {
-  if (!req.user) {
-    throw new ApiError(401, "User not authenticated");
-  }
-  const input = req.body;
-  const slot = await addAvailabilitySlot(req.user.id, input);
-  sendResponse(res, 201, "Availability slot added successfully", slot);
 });
 var getMyAvailabilitySlotsController = catchAsync(async (req, res) => {
   if (!req.user) {
     throw new ApiError(401, "User not authenticated");
   }
+  console.log("\u{1F4CD} getMyAvailabilitySlotsController - userId:", req.user.id);
   const slots = await getAvailabilitySlots(req.user.id);
   sendResponse(res, 200, "Availability slots fetched successfully", slots);
+});
+var addAvailabilitySlotController = catchAsync(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(401, "User not authenticated");
+  }
+  console.log("\u{1F4CD} addAvailabilitySlotController - userId:", req.user.id);
+  const input = req.body;
+  const slot = await addAvailabilitySlot(req.user.id, input);
+  sendResponse(res, 201, "Availability slot added successfully", slot);
+});
+var updateAvailabilitySlotController = catchAsync(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(401, "User not authenticated");
+  }
+  const { id } = req.params;
+  console.log("\u{1F4CD} updateAvailabilitySlotController - slotId:", id, "userId:", req.user.id);
+  if (!id || typeof id !== "string") {
+    throw new ApiError(400, "Invalid slot ID");
+  }
+  const input = req.body;
+  const slot = await updateAvailabilitySlot(id, req.user.id, input);
+  sendResponse(res, 200, "Availability slot updated successfully", slot);
 });
 var removeAvailabilitySlotController = catchAsync(async (req, res) => {
   if (!req.user) {
     throw new ApiError(401, "User not authenticated");
   }
   const { id } = req.params;
+  console.log("\u{1F4CD} removeAvailabilitySlotController - slotId:", id, "userId:", req.user.id);
   if (!id || typeof id !== "string") {
     throw new ApiError(400, "Invalid slot ID");
   }
@@ -1526,11 +1711,18 @@ var createAvailabilitySlotSchema = z6.object({
     isActive: z6.boolean().default(true)
   })
 });
+var updateAvailabilitySlotSchema = z6.object({
+  body: z6.object({
+    dayOfWeek: z6.number().min(0).max(6).optional(),
+    startTime: z6.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).optional(),
+    endTime: z6.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).optional(),
+    isActive: z6.boolean().optional()
+  })
+});
 
 // src/modules/technicians/technicians.route.ts
 var router7 = Router7();
 router7.get("/", getAllTechniciansController);
-router7.get("/:id", getTechnicianByIdController);
 router7.use(protect);
 router7.get("/profile", restrictTo("TECHNICIAN"), getMyProfileController);
 router7.put(
@@ -1539,14 +1731,21 @@ router7.put(
   validate(updateTechnicianProfileSchema),
   updateMyProfileController
 );
+router7.get("/availability", restrictTo("TECHNICIAN"), getMyAvailabilitySlotsController);
 router7.post(
   "/availability",
   restrictTo("TECHNICIAN"),
   validate(createAvailabilitySlotSchema),
   addAvailabilitySlotController
 );
-router7.get("/availability", restrictTo("TECHNICIAN"), getMyAvailabilitySlotsController);
+router7.put(
+  "/availability/:id",
+  restrictTo("TECHNICIAN"),
+  validate(updateAvailabilitySlotSchema),
+  updateAvailabilitySlotController
+);
 router7.delete("/availability/:id", restrictTo("TECHNICIAN"), removeAvailabilitySlotController);
+router7.get("/:id", getAllTechniciansController);
 var technicians_route_default = router7;
 
 // src/modules/bookings/bookings.route.ts

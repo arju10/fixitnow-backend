@@ -19,13 +19,23 @@ import {
 
 const router = Router();
 
-// Public routes
-router.get('/', getAllTechniciansController);
-router.get('/:id', getTechnicianByIdController);
+// ✅ IMPORTANT: Specific routes MUST come BEFORE dynamic routes
 
-// Protected routes (Technician only)
+// ============================================
+// PUBLIC ROUTES
+// ============================================
+
+// Get all technicians
+router.get('/', getAllTechniciansController);
+
+// ============================================
+// PROTECTED ROUTES (Technician only)
+// ============================================
+
+// These must come BEFORE the /:id route!
 router.use(protect);
 
+// Profile routes (specific)
 router.get('/profile', restrictTo('TECHNICIAN'), getMyProfileController);
 router.put(
   '/profile',
@@ -34,7 +44,7 @@ router.put(
   updateMyProfileController
 );
 
-// Availability slots (Technician only)
+// Availability routes (specific)
 router.get('/availability', restrictTo('TECHNICIAN'), getMyAvailabilitySlotsController);
 router.post(
   '/availability',
@@ -49,5 +59,12 @@ router.put(
   updateAvailabilitySlotController
 );
 router.delete('/availability/:id', restrictTo('TECHNICIAN'), removeAvailabilitySlotController);
+
+// ============================================
+// DYNAMIC ROUTE (must come LAST)
+// ============================================
+
+// Get technician by profile ID (public)
+router.get('/:id', getAllTechniciansController);
 
 export default router;
