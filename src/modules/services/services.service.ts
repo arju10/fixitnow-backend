@@ -141,7 +141,7 @@ export const createNewService = async (technicianId: string, input: CreateServic
     price: input.price,
     categoryId: input.categoryId,
     technicianId: technician.id,
-    isActive: true, // New services are active by default
+    isActive: true,
   };
 
   if (input.description !== undefined) {
@@ -196,7 +196,7 @@ export const updateSingleService = async (serviceId: string, input: UpdateServic
   if (input.price !== undefined) data.price = input.price;
   if (input.durationMins !== undefined) data.durationMins = input.durationMins;
   if (input.categoryId !== undefined) data.categoryId = input.categoryId;
-  if (input.isActive !== undefined) data.isActive = input.isActive; // ✅ Add isActive support
+  if (input.isActive !== undefined) data.isActive = input.isActive; // ✅ CRITICAL FIX
 
   return prisma.service.update({
     where: { id: serviceId },
