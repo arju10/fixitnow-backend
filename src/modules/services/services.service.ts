@@ -120,7 +120,6 @@ export const getServicesByTechnicianId = async (technicianId: string) => {
 };
 
 export const createNewService = async (technicianId: string, input: CreateServiceInput) => {
-  // Check if technician exists
   const technician = await prisma.technicianProfile.findUnique({
     where: { userId: technicianId },
   });
@@ -129,7 +128,6 @@ export const createNewService = async (technicianId: string, input: CreateServic
     throw new ApiError(404, 'Technician profile not found');
   }
 
-  // Check if category exists
   const category = await prisma.category.findUnique({
     where: { id: input.categoryId },
   });
@@ -143,6 +141,7 @@ export const createNewService = async (technicianId: string, input: CreateServic
     price: input.price,
     categoryId: input.categoryId,
     technicianId: technician.id,
+    isActive: true, // New services are active by default
   };
 
   if (input.description !== undefined) {
@@ -179,10 +178,8 @@ export const createNewService = async (technicianId: string, input: CreateServic
 };
 
 export const updateSingleService = async (serviceId: string, input: UpdateServiceInput) => {
-  // Check if service exists
   await getSingleService(serviceId);
 
-  // If categoryId is being updated, check if category exists
   if (input.categoryId) {
     const category = await prisma.category.findUnique({
       where: { id: input.categoryId },
@@ -199,6 +196,7 @@ export const updateSingleService = async (serviceId: string, input: UpdateServic
   if (input.price !== undefined) data.price = input.price;
   if (input.durationMins !== undefined) data.durationMins = input.durationMins;
   if (input.categoryId !== undefined) data.categoryId = input.categoryId;
+  if (input.isActive !== undefined) data.isActive = input.isActive; // ✅ Add isActive support
 
   return prisma.service.update({
     where: { id: serviceId },
@@ -227,10 +225,8 @@ export const updateSingleService = async (serviceId: string, input: UpdateServic
 };
 
 export const deleteSingleService = async (serviceId: string) => {
-  // Check if service exists
   await getSingleService(serviceId);
 
-  // Check if service has bookings
   const service = await prisma.service.findUnique({
     where: { id: serviceId },
     include: {
