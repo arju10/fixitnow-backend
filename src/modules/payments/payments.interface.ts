@@ -1,5 +1,4 @@
-import type { Request, Response } from 'express';
-import type { CreatePaymentInput } from './payments.validation';
+import { PaymentStatus, PaymentProvider } from '@prisma/client';
 
 export interface IPayment {
   id: string;
@@ -8,21 +7,20 @@ export interface IPayment {
   transactionId: string;
   amount: number;
   method: string;
-  provider: string;
-  status: string;
+  provider: PaymentProvider;
+  providerTransactionId: string;
+  status: PaymentStatus;
   paidAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface IPaymentWithDetails extends IPayment {
+export interface IPaymentWithRelations extends IPayment {
   booking: {
     id: string;
-    customer: {
-      id: string;
-      name: string;
-      email: string;
-    };
+    scheduledAt: Date;
+    totalAmount: number;
+    status: string;
     service: {
       id: string;
       title: string;
@@ -37,27 +35,18 @@ export interface IPaymentWithDetails extends IPayment {
       };
     };
   };
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
-export interface IPaymentService {
-  createPayment(
-    userId: string,
-    input: CreatePaymentInput
-  ): Promise<{
-    payment: IPayment;
-    clientSecret: string;
-    paymentIntentId: string;
-  }>;
-  confirmPayment(paymentIntentId: string): Promise<IPaymentWithDetails>;
-  getPaymentHistory(userId: string): Promise<IPaymentWithDetails[]>;
-  getPaymentById(paymentId: string, userId: string): Promise<IPaymentWithDetails>;
-  handleStripeWebhook(event: any): Promise<void>;
+export interface ICreatePaymentInput {
+  bookingId: string;
+  provider: PaymentProvider;
 }
 
-export interface IPaymentController {
-  createPayment: (req: Request, res: Response) => Promise<void>;
-  confirmPayment: (req: Request, res: Response) => Promise<void>;
-  getPaymentHistory: (req: Request, res: Response) => Promise<void>;
-  getPaymentById: (req: Request, res: Response) => Promise<void>;
-  webhook: (req: Request, res: Response) => Promise<void>;
+export interface IConfirmPaymentInput {
+  transactionId: string;
 }

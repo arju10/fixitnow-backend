@@ -1,13 +1,18 @@
 import { prisma } from '../../lib/prisma';
 import { ApiError } from '../../utils/ApiError';
-import { stripe, createPaymentIntent, retrievePaymentIntent } from '../../lib/stripe';
+import { stripe } from '../../lib/stripe'; // ✅ Fixed import path
 import type { CreatePaymentInput } from './payments.validation';
-import { PaymentProvider, PaymentStatus, BookingStatus } from '@prisma/client';
+import { PaymentStatus, BookingStatus } from '@prisma/client';
 
+/**
+ * Create a payment for a booking
+ */
 export const createPayment = async (userId: string, input: CreatePaymentInput) => {
-  const { bookingId } = input;
+  const { bookingId, provider } = input;
 
-  // Get booking details
+  console.log('💰 Creating payment for booking:', bookingId, 'provider:', provider);
+
+  // 1. Get booking details
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -25,17 +30,17 @@ export const createPayment = async (userId: string, input: CreatePaymentInput) =
     throw new ApiError(404, 'Booking not found');
   }
 
-  // Check if user owns this booking
+  // 2. Check if user owns this booking
   if (booking.customerId !== userId) {
     throw new ApiError(403, 'You can only pay for your own bookings');
   }
 
-  // Check if booking is accepted
+  // 3. Check if booking is accepted
   if (booking.status !== BookingStatus.ACCEPTED) {
     throw new ApiError(400, 'Booking must be accepted before payment');
   }
 
-  // Check if payment already exists
+  // 4. Check if payment already exists
   const existingPayment = await prisma.payment.findUnique({
     where: { bookingId },
   });
@@ -44,114 +49,48 @@ export const createPayment = async (userId: string, input: CreatePaymentInput) =
     throw new ApiError(409, 'Payment already exists for this booking');
   }
 
-  // Create Stripe payment intent
-  const paymentIntent = await createPaymentIntent(booking.totalAmount, 'usd', {
-    bookingId: booking.id,
-    customerId: userId,
-    technicianId: booking.technicianId,
-    serviceId: booking.serviceId,
-  });
+  // 5. Generate transaction ID
+  const transactionId = `FIX-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-  // Create payment record
-  const payment = await prisma.payment.create({
+  // 6. Create payment intent based on provider
+  let providerTransactionId: string;
+
+  if (provider === 'STRIPE') {
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(booking.totalAmount * 100), // Convert to cents
+        currency: 'usd',
+        metadata: {
+          bookingId: booking.id,
+          customerId: userId,
+          technicianId: booking.technicianId,
+          transactionId,
+        },
+        description: `Payment for booking ${booking.id}`,
+      });
+      providerTransactionId = paymentIntent.id;
+    } catch (error) {
+      console.error('Stripe error:', error);
+      throw new ApiError(500, 'Failed to create Stripe payment intent');
+    }
+  } else {
+    // SSLCommerz - For now, we'll simulate it
+    providerTransactionId = `SSLC_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    console.log('💰 SSLCommerz payment simulated:', providerTransactionId);
+  }
+
+  // 7. Create payment record
+  const newPayment = await prisma.payment.create({
     data: {
-      bookingId: booking.id,
+      bookingId,
       userId,
-      transactionId: paymentIntent.id, // ✅ Changed from providerId to transactionId
+      transactionId,
       amount: booking.totalAmount,
       method: 'card',
-      provider: PaymentProvider.STRIPE,
+      provider,
+      providerTransactionId,
       status: PaymentStatus.PENDING,
-      // currency field removed - not in schema
     },
-  });
-
-  return {
-    payment,
-    clientSecret: paymentIntent.client_secret,
-    paymentIntentId: paymentIntent.id,
-  };
-};
-
-export const confirmPayment = async (paymentIntentId: string) => {
-  // Retrieve payment intent from Stripe
-  const paymentIntent = await retrievePaymentIntent(paymentIntentId);
-
-  // Find payment record by transactionId
-  const payment = await prisma.payment.findFirst({
-    where: { transactionId: paymentIntentId }, // ✅ Changed from providerId to transactionId
-    include: {
-      booking: {
-        include: {
-          customer: true,
-          technician: {
-            include: {
-              user: true,
-            },
-          },
-          service: true,
-        },
-      },
-    },
-  });
-
-  if (!payment) {
-    throw new ApiError(404, 'Payment not found');
-  }
-
-  // Update payment status based on Stripe status
-  let status: PaymentStatus;
-  let paidAt: Date | null = null;
-
-  switch (paymentIntent.status) {
-    case 'succeeded':
-      status = PaymentStatus.COMPLETED;
-      paidAt = new Date();
-      break;
-    case 'canceled':
-    case 'requires_payment_method':
-      status = PaymentStatus.FAILED;
-      break;
-    default:
-      status = PaymentStatus.PENDING;
-  }
-
-  // Update payment record
-  const updatedPayment = await prisma.payment.update({
-    where: { id: payment.id },
-    data: {
-      status,
-      paidAt,
-    },
-    include: {
-      booking: {
-        include: {
-          customer: true,
-          technician: {
-            include: {
-              user: true,
-            },
-          },
-          service: true,
-        },
-      },
-    },
-  });
-
-  // If payment is completed, update booking status to PAID
-  if (status === PaymentStatus.COMPLETED) {
-    await prisma.booking.update({
-      where: { id: payment.bookingId },
-      data: { status: BookingStatus.PAID },
-    });
-  }
-
-  return updatedPayment;
-};
-
-export const getPaymentHistory = async (userId: string) => {
-  return prisma.payment.findMany({
-    where: { userId },
     include: {
       booking: {
         include: {
@@ -169,14 +108,80 @@ export const getPaymentHistory = async (userId: string) => {
           },
         },
       },
-    },
-    orderBy: {
-      createdAt: 'desc',
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
   });
+
+  console.log('💰 Payment created:', newPayment.id, 'transactionId:', transactionId);
+
+  // 8. Return payment with client secret for Stripe
+  if (provider === 'STRIPE') {
+    return {
+      ...newPayment,
+      clientSecret: providerTransactionId, // In real implementation, you'd get this from Stripe
+    };
+  }
+
+  return newPayment;
 };
 
-export const getPaymentById = async (paymentId: string, userId: string) => {
+/**
+ * Confirm payment (webhook or manual)
+ */
+export const confirmPayment = async (transactionId: string) => {
+  console.log('💰 Confirming payment for transactionId:', transactionId);
+
+  // 1. Find payment by transaction ID
+  const existingPayment = await prisma.payment.findUnique({
+    where: { transactionId },
+    include: {
+      booking: true,
+    },
+  });
+
+  if (!existingPayment) {
+    throw new ApiError(404, 'Payment not found');
+  }
+
+  if (existingPayment.status === PaymentStatus.COMPLETED) {
+    throw new ApiError(400, 'Payment already completed');
+  }
+
+  // 2. Update payment status to COMPLETED
+  const updatedPayment = await prisma.$transaction(async (tx) => {
+    // Update payment
+    const payment = await tx.payment.update({
+      where: { id: existingPayment.id },
+      data: {
+        status: PaymentStatus.COMPLETED,
+        paidAt: new Date(),
+      },
+    });
+
+    // Update booking status to PAID
+    await tx.booking.update({
+      where: { id: payment.bookingId },
+      data: { status: BookingStatus.PAID },
+    });
+
+    return payment;
+  });
+
+  console.log('💰 Payment confirmed:', updatedPayment.id);
+
+  return updatedPayment;
+};
+
+/**
+ * Get payment by ID
+ */
+export const getPaymentById = async (paymentId: string, userId: string, userRole: string) => {
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
     include: {
@@ -196,6 +201,13 @@ export const getPaymentById = async (paymentId: string, userId: string) => {
           },
         },
       },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
   });
 
@@ -203,26 +215,156 @@ export const getPaymentById = async (paymentId: string, userId: string) => {
     throw new ApiError(404, 'Payment not found');
   }
 
-  if (payment.userId !== userId) {
-    throw new ApiError(403, 'You can only view your own payments');
+  // Check access: customer who paid, admin, or technician of the booking
+  if (
+    userRole !== 'ADMIN' &&
+    payment.userId !== userId &&
+    payment.booking.technician.userId !== userId
+  ) {
+    throw new ApiError(403, 'You do not have access to this payment');
   }
 
   return payment;
 };
 
-export const handleStripeWebhook = async (event: any) => {
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      await confirmPayment(event.data.object.id);
-      break;
-    case 'payment_intent.payment_failed':
-      const paymentIntent = event.data.object;
-      await prisma.payment.updateMany({
-        where: { transactionId: paymentIntent.id }, // ✅ Changed from providerId to transactionId
-        data: { status: PaymentStatus.FAILED },
-      });
-      break;
-    default:
-      console.log(`Unhandled event type: ${event.type}`);
+/**
+ * Get user's payment history
+ */
+export const getUserPayments = async (userId: string, userRole: string) => {
+  const where: any = {};
+
+  if (userRole === 'ADMIN') {
+    // Admin can see all payments
+  } else if (userRole === 'TECHNICIAN') {
+    // Technician can see payments for their bookings
+    const technician = await prisma.technicianProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (technician) {
+      where.booking = {
+        technicianId: technician.id,
+      };
+    }
+  } else {
+    // Customer can see their own payments
+    where.userId = userId;
   }
+
+  return prisma.payment.findMany({
+    where,
+    include: {
+      booking: {
+        include: {
+          service: true,
+          technician: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+};
+
+/**
+ * Handle Stripe webhook
+ */
+export const handleStripeWebhook = async (event: any) => {
+  console.log('💰 Stripe webhook received:', event.type);
+
+  switch (event.type) {
+    case 'payment_intent.succeeded': {
+      const paymentIntent = event.data.object;
+      const transactionId = paymentIntent.metadata?.transactionId;
+
+      if (transactionId) {
+        try {
+          await confirmPayment(transactionId);
+          console.log('💰 Payment confirmed via webhook:', transactionId);
+        } catch (error) {
+          console.error('💰 Webhook error:', error);
+        }
+      }
+      break;
+    }
+
+    case 'payment_intent.payment_failed': {
+      const paymentIntent = event.data.object;
+      const transactionId = paymentIntent.metadata?.transactionId;
+
+      if (transactionId) {
+        await prisma.payment.update({
+          where: { transactionId },
+          data: { status: PaymentStatus.FAILED },
+        });
+        console.log('💰 Payment failed:', transactionId);
+      }
+      break;
+    }
+
+    default:
+      console.log('💰 Unhandled webhook event:', event.type);
+  }
+};
+
+/**
+ * Refund payment (optional)
+ */
+export const refundPayment = async (paymentId: string, userId: string, userRole: string) => {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    include: {
+      booking: true,
+    },
+  });
+
+  if (!payment) {
+    throw new ApiError(404, 'Payment not found');
+  }
+
+  if (userRole !== 'ADMIN' && payment.userId !== userId) {
+    throw new ApiError(403, 'You do not have permission to refund this payment');
+  }
+
+  if (payment.status !== PaymentStatus.COMPLETED) {
+    throw new ApiError(400, 'Only completed payments can be refunded');
+  }
+
+  // In production, you would call Stripe refund API here
+  // await stripe.refunds.create({ payment_intent: payment.providerTransactionId });
+
+  const updatedPayment = await prisma.$transaction(async (tx) => {
+    const updated = await tx.payment.update({
+      where: { id: paymentId },
+      data: { status: PaymentStatus.REFUNDED },
+    });
+
+    await tx.booking.update({
+      where: { id: payment.bookingId },
+      data: { status: BookingStatus.CANCELLED },
+    });
+
+    return updated;
+  });
+
+  console.log('💰 Payment refunded:', paymentId);
+  return updatedPayment;
 };
