@@ -118,7 +118,7 @@ export const getAllUsers = async (filters?: { role?: string; status?: string }) 
 
 /**
  * Get all bookings with filters (admin view)
- * ✅ Fixed: Explicitly handle undefined values
+ * ✅ Fixed: Added more logging and error handling
  */
 export const getAllBookings = async (filters?: {
   status?: string;
@@ -126,7 +126,8 @@ export const getAllBookings = async (filters?: {
   limit?: number;
 }) => {
   try {
-    // ✅ Explicitly handle undefined values
+    console.log('📋 getAllBookings called with filters:', filters);
+
     const page = filters?.page ?? 1;
     const limit = filters?.limit ?? 50;
     const skip = (page - 1) * limit;
@@ -136,6 +137,9 @@ export const getAllBookings = async (filters?: {
     if (filters?.status) {
       where.status = filters.status;
     }
+
+    console.log('📋 Where clause:', where);
+    console.log('📋 Skip:', skip, 'Limit:', limit);
 
     const [bookings, total] = await Promise.all([
       prisma.booking.findMany({
@@ -149,6 +153,7 @@ export const getAllBookings = async (filters?: {
               id: true,
               name: true,
               email: true,
+              phone: true,
             },
           },
           technician: {
@@ -157,6 +162,7 @@ export const getAllBookings = async (filters?: {
                 select: {
                   id: true,
                   name: true,
+                  email: true,
                 },
               },
             },
@@ -172,6 +178,8 @@ export const getAllBookings = async (filters?: {
       }),
       prisma.booking.count({ where }),
     ]);
+
+    console.log('📋 Found bookings:', bookings.length, 'Total:', total);
 
     return {
       bookings,
