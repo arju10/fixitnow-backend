@@ -3,6 +3,7 @@ import { ApiError } from '../../utils/ApiError';
 
 /**
  * Create a review
+ * ✅ One review per service (not per booking)
  */
 export const createReview = async (
   customerId: string,
@@ -12,11 +13,13 @@ export const createReview = async (
 
   console.log('📝 Creating review for booking:', bookingId);
 
+  // 1. Get the booking with service
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
       customer: true,
       technician: true,
+      service: true,
     },
   });
 
@@ -24,22 +27,32 @@ export const createReview = async (
     throw new ApiError(404, 'Booking not found');
   }
 
+  // 2. Check if this customer owns the booking
   if (booking.customerId !== customerId) {
     throw new ApiError(403, 'You can only review your own bookings');
   }
 
+  // 3. Check if booking is completed
   if (booking.status !== 'COMPLETED') {
     throw new ApiError(400, 'You can only review completed bookings');
   }
 
-  const existingReview = await prisma.review.findUnique({
-    where: { bookingId },
+  // 4. ✅ Check if customer already reviewed THIS SERVICE
+  const existingReview = await prisma.review.findFirst({
+    where: {
+      customerId,
+      technicianId: booking.technicianId,
+      booking: {
+        serviceId: booking.serviceId,
+      },
+    },
   });
 
   if (existingReview) {
-    throw new ApiError(409, 'You have already reviewed this booking');
+    throw new ApiError(409, 'You have already reviewed this service');
   }
 
+  // 5. Create the review
   const reviewData: any = {
     bookingId,
     customerId,
@@ -64,6 +77,7 @@ export const createReview = async (
     },
   });
 
+  // 6. Update technician's average rating
   await updateTechnicianRating(booking.technicianId);
 
   console.log('✅ Review created:', review.id);
@@ -94,7 +108,7 @@ const updateTechnicianRating = async (technicianId: string) => {
 };
 
 /**
- * Get reviews for a technician (by technician ID)
+ * Get reviews for a technician
  */
 export const getReviewsByTechnician = async (technicianId: string) => {
   return prisma.review.findMany({
@@ -127,7 +141,7 @@ export const getReviewsByTechnician = async (technicianId: string) => {
 };
 
 /**
- * Get reviews by a customer (my reviews)
+ * Get reviews by a customer
  */
 export const getMyReviews = async (customerId: string) => {
   return prisma.review.findMany({

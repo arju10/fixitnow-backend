@@ -2400,7 +2400,8 @@ var createReview = async (customerId, input) => {
     where: { id: bookingId },
     include: {
       customer: true,
-      technician: true
+      technician: true,
+      service: true
     }
   });
   if (!booking) {
@@ -2412,11 +2413,17 @@ var createReview = async (customerId, input) => {
   if (booking.status !== "COMPLETED") {
     throw new ApiError(400, "You can only review completed bookings");
   }
-  const existingReview = await prisma.review.findUnique({
-    where: { bookingId }
+  const existingReview = await prisma.review.findFirst({
+    where: {
+      customerId,
+      technicianId: booking.technicianId,
+      booking: {
+        serviceId: booking.serviceId
+      }
+    }
   });
   if (existingReview) {
-    throw new ApiError(409, "You have already reviewed this booking");
+    throw new ApiError(409, "You have already reviewed this service");
   }
   const reviewData = {
     bookingId,
@@ -2535,66 +2542,134 @@ var getAverageRating = async (technicianId) => {
     totalReviews: reviews._count.rating || 0
   };
 };
+var updateReview = async (reviewId, customerId, input) => {
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId }
+  });
+  if (!review) {
+    throw new ApiError(404, "Review not found");
+  }
+  if (review.customerId !== customerId) {
+    throw new ApiError(403, "You can only update your own reviews");
+  }
+  const updateData = {};
+  if (input.rating !== void 0) {
+    updateData.rating = input.rating;
+  }
+  if (input.comment !== void 0) {
+    updateData.comment = input.comment;
+  }
+  const updatedReview = await prisma.review.update({
+    where: { id: reviewId },
+    data: updateData,
+    include: {
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      }
+    }
+  });
+  await updateTechnicianRating(review.technicianId);
+  return updatedReview;
+};
+var deleteReview = async (reviewId, customerId) => {
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId }
+  });
+  if (!review) {
+    throw new ApiError(404, "Review not found");
+  }
+  if (review.customerId !== customerId) {
+    throw new ApiError(403, "You can only delete your own reviews");
+  }
+  await prisma.review.delete({
+    where: { id: reviewId }
+  });
+  await updateTechnicianRating(review.technicianId);
+};
 
 // src/modules/reviews/reviews.controller.ts
-var createReviewController = catchAsync(async (req, res) => {
+var create = catchAsync(async (req, res) => {
   if (!req.user) {
     throw new ApiError(401, "User not authenticated");
   }
-  if (req.user.role !== "CUSTOMER") {
-    throw new ApiError(403, "Only customers can create reviews");
+  const { bookingId, rating, comment } = req.body;
+  if (!bookingId) {
+    throw new ApiError(400, "Booking ID is required");
   }
-  const input = req.body;
-  const review = await createReview(req.user.id, input);
+  if (!rating || rating < 1 || rating > 5) {
+    throw new ApiError(400, "Rating must be between 1 and 5");
+  }
+  const review = await createReview(req.user.id, {
+    bookingId,
+    rating,
+    comment
+  });
   sendResponse(res, 201, "Review created successfully", review);
 });
-var getTechnicianReviewsController = catchAsync(async (req, res) => {
+var getTechnicianReviews = catchAsync(async (req, res) => {
   const { technicianId } = req.params;
-  if (!technicianId || typeof technicianId !== "string") {
-    throw new ApiError(400, "Invalid technician ID");
+  if (!technicianId) {
+    throw new ApiError(400, "Technician ID is required");
   }
-  const [reviews, rating] = await Promise.all([
-    getReviewsByTechnician(technicianId),
-    getAverageRating(technicianId)
-  ]);
-  sendResponse(res, 200, "Reviews fetched successfully", {
-    reviews,
-    ...rating
-  });
+  const id = Array.isArray(technicianId) ? technicianId[0] : technicianId;
+  const reviews = await getReviewsByTechnician(id);
+  sendResponse(res, 200, "Reviews fetched successfully", reviews);
 });
 var getMyReviewsController = catchAsync(async (req, res) => {
   if (!req.user) {
     throw new ApiError(401, "User not authenticated");
   }
-  if (req.user.role !== "TECHNICIAN") {
-    throw new ApiError(403, "Only technicians can view their reviews");
-  }
-  const [reviews, rating] = await Promise.all([
-    getMyReviews(req.user.id),
-    getAverageRating((await getMyReviews(req.user.id))[0]?.technicianId || "")
-  ]);
-  sendResponse(res, 200, "My reviews fetched successfully", {
-    reviews,
-    ...rating
-  });
+  const reviews = await getMyReviews(req.user.id);
+  sendResponse(res, 200, "My reviews fetched successfully", reviews);
 });
-
-// src/modules/reviews/reviews.validation.ts
-import { z as z9 } from "zod";
-var createReviewSchema = z9.object({
-  body: z9.object({
-    bookingId: z9.string().min(1, "Booking ID is required"),
-    rating: z9.number().min(1, "Rating must be at least 1").max(5, "Rating must be at most 5"),
-    comment: z9.string().optional()
-  })
+var getRating = catchAsync(async (req, res) => {
+  const { technicianId } = req.params;
+  if (!technicianId) {
+    throw new ApiError(400, "Technician ID is required");
+  }
+  const id = Array.isArray(technicianId) ? technicianId[0] : technicianId;
+  const rating = await getAverageRating(id);
+  sendResponse(res, 200, "Rating fetched successfully", rating);
+});
+var update = catchAsync(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(401, "User not authenticated");
+  }
+  const { id } = req.params;
+  const { rating, comment } = req.body;
+  if (!id) {
+    throw new ApiError(400, "Review ID is required");
+  }
+  const reviewId = Array.isArray(id) ? id[0] : id;
+  const review = await updateReview(reviewId, req.user.id, { rating, comment });
+  sendResponse(res, 200, "Review updated successfully", review);
+});
+var remove = catchAsync(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(401, "User not authenticated");
+  }
+  const { id } = req.params;
+  if (!id) {
+    throw new ApiError(400, "Review ID is required");
+  }
+  const reviewId = Array.isArray(id) ? id[0] : id;
+  await deleteReview(reviewId, req.user.id);
+  sendResponse(res, 200, "Review deleted successfully");
 });
 
 // src/modules/reviews/reviews.route.ts
 var router10 = Router10();
-router10.get("/technician/:technicianId", getTechnicianReviewsController);
+router10.get("/technician/:technicianId", getTechnicianReviews);
+router10.get("/technician/:technicianId/rating", getRating);
 router10.use(protect);
-router10.post("/", restrictTo("CUSTOMER"), validate(createReviewSchema), createReviewController);
-router10.get("/my", restrictTo("TECHNICIAN"), getMyReviewsController);
+router10.post("/", restrictTo("CUSTOMER"), create);
+router10.get("/my", restrictTo("CUSTOMER"), getMyReviewsController);
+router10.put("/:id", restrictTo("CUSTOMER"), update);
+router10.delete("/:id", restrictTo("CUSTOMER"), remove);
 var reviews_route_default = router10;
 
 // src/modules/payments/payments.route.ts
@@ -2951,23 +3026,23 @@ var refundPaymentController = catchAsync(async (req, res) => {
 });
 
 // src/modules/payments/payments.validation.ts
-import { z as z10 } from "zod";
+import { z as z9 } from "zod";
 import { PaymentProvider } from "@prisma/client";
-var createPaymentSchema = z10.object({
-  body: z10.object({
-    bookingId: z10.string().uuid("Invalid booking ID format"),
-    provider: z10.enum([PaymentProvider.STRIPE, PaymentProvider.SSLCOMMERZ])
+var createPaymentSchema = z9.object({
+  body: z9.object({
+    bookingId: z9.string().uuid("Invalid booking ID format"),
+    provider: z9.enum([PaymentProvider.STRIPE, PaymentProvider.SSLCOMMERZ])
   })
 });
-var confirmPaymentSchema = z10.object({
-  body: z10.object({
-    transactionId: z10.string().min(1, "Transaction ID is required")
+var confirmPaymentSchema = z9.object({
+  body: z9.object({
+    transactionId: z9.string().min(1, "Transaction ID is required")
   })
 });
-var paymentWebhookSchema = z10.object({
-  body: z10.object({
-    event: z10.string(),
-    data: z10.any()
+var paymentWebhookSchema = z9.object({
+  body: z9.object({
+    event: z9.string(),
+    data: z9.any()
   })
 });
 

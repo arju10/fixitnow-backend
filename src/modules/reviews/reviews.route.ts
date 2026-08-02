@@ -1,25 +1,26 @@
 import { Router } from 'express';
 import {
-  createReviewController,
-  getTechnicianReviewsController,
+  create,
+  getTechnicianReviews,
   getMyReviewsController,
+  getRating,
+  update,
+  remove,
 } from './reviews.controller';
 import { protect, restrictTo } from '../../middleware/auth.middleware';
-import { validate } from '../../middleware/validate.middleware';
-import { createReviewSchema } from './reviews.validation';
 
 const router = Router();
 
 // Public routes
-router.get('/technician/:technicianId', getTechnicianReviewsController);
+router.get('/technician/:technicianId', getTechnicianReviews);
+router.get('/technician/:technicianId/rating', getRating);
 
 // Protected routes
 router.use(protect);
 
-// Customer only - create review
-router.post('/', restrictTo('CUSTOMER'), validate(createReviewSchema), createReviewController);
-
-// Technician only - get my reviews
-router.get('/my', restrictTo('TECHNICIAN'), getMyReviewsController);
+router.post('/', restrictTo('CUSTOMER'), create);
+router.get('/my', restrictTo('CUSTOMER'), getMyReviewsController);
+router.put('/:id', restrictTo('CUSTOMER'), update);
+router.delete('/:id', restrictTo('CUSTOMER'), remove);
 
 export default router;
