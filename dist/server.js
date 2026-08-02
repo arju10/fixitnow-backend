@@ -640,6 +640,7 @@ var getAllUsers2 = async (filters) => {
 };
 var getAllBookings = async (filters) => {
   try {
+    console.log("\u{1F4CB} getAllBookings called with filters:", filters);
     const page = filters?.page ?? 1;
     const limit = filters?.limit ?? 50;
     const skip = (page - 1) * limit;
@@ -647,6 +648,8 @@ var getAllBookings = async (filters) => {
     if (filters?.status) {
       where.status = filters.status;
     }
+    console.log("\u{1F4CB} Where clause:", where);
+    console.log("\u{1F4CB} Skip:", skip, "Limit:", limit);
     const [bookings, total] = await Promise.all([
       prisma.booking.findMany({
         where,
@@ -658,7 +661,8 @@ var getAllBookings = async (filters) => {
             select: {
               id: true,
               name: true,
-              email: true
+              email: true,
+              phone: true
             }
           },
           technician: {
@@ -666,7 +670,8 @@ var getAllBookings = async (filters) => {
               user: {
                 select: {
                   id: true,
-                  name: true
+                  name: true,
+                  email: true
                 }
               }
             }
@@ -682,6 +687,7 @@ var getAllBookings = async (filters) => {
       }),
       prisma.booking.count({ where })
     ]);
+    console.log("\u{1F4CB} Found bookings:", bookings.length, "Total:", total);
     return {
       bookings,
       total,
