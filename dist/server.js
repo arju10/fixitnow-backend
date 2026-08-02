@@ -544,151 +544,252 @@ var users_route_default = router2;
 // src/modules/admin/admin.route.ts
 import { Router as Router3 } from "express";
 
-// src/modules/admin/admin.controller.ts
-var getAllUsers2 = catchAsync(async (req, res) => {
-  const { role, status } = req.query;
-  const where = {};
-  if (role) where.role = role;
-  if (status) where.status = status;
-  const users = await prisma.user.findMany({
-    where,
-    include: {
-      technicianProfile: {
-        include: {
-          services: true,
-          availability: true
-        }
-      },
-      bookings: {
-        where: {
-          status: {
-            notIn: ["CANCELLED", "DECLINED"]
+// src/modules/admin/admin.service.ts
+var getDashboardStats2 = async () => {
+  try {
+    const [totalUsers, totalTechnicians, totalCustomers, totalAdmins, bannedUsers] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { role: "TECHNICIAN" } }),
+      prisma.user.count({ where: { role: "CUSTOMER" } }),
+      prisma.user.count({ where: { role: "ADMIN" } }),
+      prisma.user.count({ where: { status: "BANNED" } })
+    ]);
+    const [totalBookings, completedBookings] = await Promise.all([
+      prisma.booking.count(),
+      prisma.booking.count({ where: { status: "COMPLETED" } })
+    ]);
+    const payments = await prisma.payment.aggregate({
+      where: { status: "COMPLETED" },
+      _sum: { amount: true }
+    });
+    const recentBookings = await prisma.booking.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true
           }
         },
-        select: {
-          id: true,
-          status: true,
-          totalAmount: true,
-          scheduledAt: true
-        }
-      }
-    },
-    orderBy: {
-      createdAt: "desc"
-    }
-  });
-  sendResponse(res, 200, "Users fetched successfully", users);
-});
-var getAllBookings = catchAsync(async (req, res) => {
-  const { status, fromDate, toDate } = req.query;
-  const where = {};
-  if (status) where.status = status;
-  if (fromDate) {
-    where.scheduledAt = {
-      gte: new Date(fromDate)
-    };
-  }
-  if (toDate) {
-    where.scheduledAt = {
-      ...where.scheduledAt,
-      lte: new Date(toDate)
-    };
-  }
-  const bookings = await prisma.booking.findMany({
-    where,
-    include: {
-      customer: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true
-        }
-      },
-      technician: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true
+        service: {
+          select: {
+            id: true,
+            title: true
+          }
+        },
+        technician: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true
+              }
             }
           }
         }
+      }
+    });
+    return {
+      totalUsers,
+      totalTechnicians,
+      totalCustomers,
+      totalAdmins,
+      bannedUsers,
+      totalBookings,
+      completedBookings,
+      totalRevenue: payments._sum.amount || 0,
+      recentBookings
+    };
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
+    throw new ApiError(500, "Failed to fetch dashboard statistics");
+  }
+};
+var getAllUsers2 = async (filters) => {
+  try {
+    const where = {};
+    if (filters?.role) {
+      where.role = filters.role;
+    }
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+    const users = await prisma.user.findMany({
+      where,
+      include: {
+        technicianProfile: {
+          include: {
+            services: true,
+            availability: true
+          }
+        },
+        customerProfile: true,
+        adminProfile: true
       },
-      service: {
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+    return users.map(({ password, ...user }) => user);
+  } catch (error) {
+    console.error("Get users error:", error);
+    throw new ApiError(500, "Failed to fetch users");
+  }
+};
+var getAllBookings = async (filters) => {
+  try {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 50;
+    const skip = (page - 1) * limit;
+    const where = {};
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+    const [bookings, total] = await Promise.all([
+      prisma.booking.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
         include: {
-          category: true
+          customer: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          technician: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              }
+            }
+          },
+          service: {
+            include: {
+              category: true
+            }
+          },
+          payment: true,
+          review: true
         }
-      },
-      payment: true,
-      review: true
-    },
-    orderBy: {
-      createdAt: "desc"
+      }),
+      prisma.booking.count({ where })
+    ]);
+    return {
+      bookings,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    };
+  } catch (error) {
+    console.error("Get bookings error:", error);
+    throw new ApiError(500, "Failed to fetch bookings");
+  }
+};
+var updateUserStatus2 = async (userId, status) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+    if (!user) {
+      throw new ApiError(404, "User not found");
     }
-  });
-  sendResponse(res, 200, "Bookings fetched successfully", bookings);
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { status }
+    });
+    const { password, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    console.error("Update user status error:", error);
+    throw new ApiError(500, "Failed to update user status");
+  }
+};
+var deleteUser2 = async (userId) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+    await prisma.user.delete({
+      where: { id: userId }
+    });
+    return { message: "User deleted successfully" };
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    console.error("Delete user error:", error);
+    throw new ApiError(500, "Failed to delete user");
+  }
+};
+
+// src/modules/admin/admin.controller.ts
+var getStats2 = catchAsync(async (req, res) => {
+  console.log("\u{1F4CA} Admin stats requested");
+  const stats = await getDashboardStats2();
+  sendResponse(res, 200, "Dashboard stats fetched successfully", stats);
 });
-var getDashboardStats2 = catchAsync(async (req, res) => {
-  const [
-    totalUsers,
-    totalTechnicians,
-    totalCustomers,
-    totalAdmins,
-    totalBookings,
-    completedBookings,
-    totalRevenue
-  ] = await Promise.all([
-    prisma.user.count(),
-    prisma.user.count({ where: { role: "TECHNICIAN" } }),
-    prisma.user.count({ where: { role: "CUSTOMER" } }),
-    prisma.user.count({ where: { role: "ADMIN" } }),
-    prisma.booking.count(),
-    prisma.booking.count({ where: { status: "COMPLETED" } }),
-    prisma.payment.aggregate({
-      where: { status: "COMPLETED" },
-      _sum: {
-        amount: true
-      }
-    })
-  ]);
-  const recentBookings = await prisma.booking.findMany({
-    take: 5,
-    orderBy: { createdAt: "desc" },
-    include: {
-      customer: {
-        select: {
-          name: true,
-          email: true
-        }
-      },
-      service: {
-        select: {
-          title: true
-        }
-      }
-    }
-  });
-  sendResponse(res, 200, "Dashboard stats fetched successfully", {
-    totalUsers,
-    totalTechnicians,
-    totalCustomers,
-    totalAdmins,
-    totalBookings,
-    completedBookings,
-    totalRevenue: totalRevenue._sum.amount || 0,
-    recentBookings
-  });
+var getUsers2 = catchAsync(async (req, res) => {
+  console.log("\u{1F465} Admin users requested");
+  const { role, status } = req.query;
+  const filters = {};
+  if (role) filters.role = role;
+  if (status) filters.status = status;
+  const users = await getAllUsers2(filters);
+  sendResponse(res, 200, "Users fetched successfully", users);
+});
+var getBookings = catchAsync(async (req, res) => {
+  console.log("\u{1F4CB} Admin bookings requested");
+  const { status, page, limit } = req.query;
+  const filters = {};
+  if (status) filters.status = status;
+  if (page) filters.page = parseInt(page);
+  if (limit) filters.limit = parseInt(limit);
+  const result = await getAllBookings(filters);
+  sendResponse(res, 200, "Bookings fetched successfully", result);
+});
+var updateStatus2 = catchAsync(async (req, res) => {
+  console.log("\u{1F504} Updating user status");
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!id || typeof id !== "string") {
+    throw new ApiError(400, "Invalid user ID");
+  }
+  if (!status || !["ACTIVE", "BANNED"].includes(status)) {
+    throw new ApiError(400, "Invalid status. Must be ACTIVE or BANNED");
+  }
+  const user = await updateUserStatus2(id, status);
+  sendResponse(res, 200, `User status updated to ${status}`, user);
+});
+var deleteUserController = catchAsync(async (req, res) => {
+  console.log("\u{1F5D1}\uFE0F Admin deleting user");
+  const { id } = req.params;
+  if (!id || typeof id !== "string") {
+    throw new ApiError(400, "Invalid user ID");
+  }
+  await deleteUser2(id);
+  sendResponse(res, 200, "User deleted successfully");
 });
 
 // src/modules/admin/admin.route.ts
 var router3 = Router3();
-router3.use(protect, restrictTo2("ADMIN"));
-router3.get("/users", getAllUsers2);
-router3.get("/bookings", getAllBookings);
-router3.get("/stats", getDashboardStats2);
+router3.use(protect);
+router3.use(restrictTo("ADMIN"));
+router3.get("/stats", getStats2);
+router3.get("/users", getUsers2);
+router3.get("/bookings", getBookings);
+router3.patch("/users/:id/status", updateStatus2);
+router3.delete("/users/:id", deleteUserController);
 var admin_route_default = router3;
 
 // src/modules/admin-profile/admin-profile.route.ts
@@ -1824,7 +1925,7 @@ var createBooking = async (customerId, input) => {
     }
   });
 };
-var getBookings = async (userId, role) => {
+var getBookings2 = async (userId, role) => {
   const where = {};
   if (role === "CUSTOMER") {
     where.customerId = userId;
@@ -2065,7 +2166,7 @@ var getMyBookingsController = catchAsync(async (req, res) => {
   if (!req.user) {
     throw new ApiError(401, "User not authenticated");
   }
-  const bookings = await getBookings(req.user.id, req.user.role);
+  const bookings = await getBookings2(req.user.id, req.user.role);
   sendResponse(res, 200, "Bookings fetched successfully", bookings);
 });
 var getBookingController = catchAsync(async (req, res) => {
