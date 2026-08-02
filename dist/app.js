@@ -2390,14 +2390,14 @@ var customer_route_default = router9;
 import { Router as Router10 } from "express";
 
 // src/modules/reviews/reviews.service.ts
-import { BookingStatus } from "@prisma/client";
 var createReview = async (customerId, input) => {
   const { bookingId, rating, comment } = input;
+  console.log("\u{1F4DD} Creating review for booking:", bookingId);
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      technician: true,
-      customer: true
+      customer: true,
+      technician: true
     }
   });
   if (!booking) {
@@ -2406,69 +2406,56 @@ var createReview = async (customerId, input) => {
   if (booking.customerId !== customerId) {
     throw new ApiError(403, "You can only review your own bookings");
   }
-  if (booking.status !== BookingStatus.COMPLETED) {
-    throw new ApiError(400, "Booking must be completed before leaving a review");
+  if (booking.status !== "COMPLETED") {
+    throw new ApiError(400, "You can only review completed bookings");
   }
   const existingReview = await prisma.review.findUnique({
     where: { bookingId }
   });
   if (existingReview) {
-    throw new ApiError(409, "Review already exists for this booking");
+    throw new ApiError(409, "You have already reviewed this booking");
+  }
+  const reviewData = {
+    bookingId,
+    customerId,
+    technicianId: booking.technicianId,
+    rating
+  };
+  if (comment !== void 0) {
+    reviewData.comment = comment;
   }
   const review = await prisma.review.create({
-    data: {
-      bookingId,
-      customerId,
-      technicianId: booking.technicianId,
-      rating,
-      comment: comment || null
-    },
+    data: reviewData,
     include: {
       customer: {
         select: {
           id: true,
           name: true,
-          email: true,
-          phone: true,
-          profileImage: true
-        }
-      },
-      technician: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-              profileImage: true
-            }
-          }
-        }
-      },
-      booking: {
-        include: {
-          service: {
-            select: {
-              id: true,
-              title: true,
-              price: true
-            }
-          }
+          email: true
         }
       }
     }
   });
   await updateTechnicianRating(booking.technicianId);
+  console.log("\u2705 Review created:", review.id);
   return review;
 };
-var getReviewsByTechnician = async (technicianId) => {
-  const technician = await prisma.technicianProfile.findUnique({
-    where: { id: technicianId }
+var updateTechnicianRating = async (technicianId) => {
+  const reviews = await prisma.review.findMany({
+    where: { technicianId },
+    select: { rating: true }
   });
-  if (!technician) {
-    throw new ApiError(404, "Technician not found");
-  }
+  const totalReviews = reviews.length;
+  const avgRating = totalReviews > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews : 0;
+  await prisma.technicianProfile.update({
+    where: { id: technicianId },
+    data: {
+      avgRating,
+      totalReviews
+    }
+  });
+};
+var getReviewsByTechnician = async (technicianId) => {
   return prisma.review.findMany({
     where: { technicianId },
     include: {
@@ -2476,18 +2463,17 @@ var getReviewsByTechnician = async (technicianId) => {
         select: {
           id: true,
           name: true,
-          email: true,
-          phone: true,
-          profileImage: true
+          email: true
         }
       },
       booking: {
-        include: {
+        select: {
+          id: true,
+          scheduledAt: true,
           service: {
             select: {
               id: true,
-              title: true,
-              price: true
+              title: true
             }
           }
         }
@@ -2498,32 +2484,29 @@ var getReviewsByTechnician = async (technicianId) => {
     }
   });
 };
-var getMyReviews = async (userId) => {
-  const technician = await prisma.technicianProfile.findUnique({
-    where: { userId }
-  });
-  if (!technician) {
-    throw new ApiError(404, "Technician profile not found");
-  }
+var getMyReviews = async (customerId) => {
   return prisma.review.findMany({
-    where: { technicianId: technician.id },
+    where: { customerId },
     include: {
-      customer: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          profileImage: true
+      technician: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
         }
       },
       booking: {
-        include: {
+        select: {
+          id: true,
+          scheduledAt: true,
           service: {
             select: {
               id: true,
-              title: true,
-              price: true
+              title: true
             }
           }
         }
@@ -2535,7 +2518,7 @@ var getMyReviews = async (userId) => {
   });
 };
 var getAverageRating = async (technicianId) => {
-  const result = await prisma.review.aggregate({
+  const reviews = await prisma.review.aggregate({
     where: { technicianId },
     _avg: {
       rating: true
@@ -2545,27 +2528,9 @@ var getAverageRating = async (technicianId) => {
     }
   });
   return {
-    averageRating: result._avg.rating || 0,
-    totalReviews: result._count.rating || 0
+    avgRating: reviews._avg.rating || 0,
+    totalReviews: reviews._count.rating || 0
   };
-};
-var updateTechnicianRating = async (technicianId) => {
-  const result = await prisma.review.aggregate({
-    where: { technicianId },
-    _avg: {
-      rating: true
-    },
-    _count: {
-      rating: true
-    }
-  });
-  await prisma.technicianProfile.update({
-    where: { id: technicianId },
-    data: {
-      avgRating: result._avg.rating || 0,
-      totalReviews: result._count.rating || 0
-    }
-  });
 };
 
 // src/modules/reviews/reviews.controller.ts
@@ -2643,7 +2608,7 @@ var stripe = new Stripe(config_default.stripe_secret_key, {
 });
 
 // src/modules/payments/payments.service.ts
-import { PaymentStatus, BookingStatus as BookingStatus2 } from "@prisma/client";
+import { PaymentStatus, BookingStatus } from "@prisma/client";
 var createPayment = async (userId, input) => {
   const { bookingId, provider } = input;
   console.log("\u{1F4B0} Creating payment for booking:", bookingId, "provider:", provider);
@@ -2665,7 +2630,7 @@ var createPayment = async (userId, input) => {
   if (booking.customerId !== userId) {
     throw new ApiError(403, "You can only pay for your own bookings");
   }
-  if (booking.status !== BookingStatus2.ACCEPTED) {
+  if (booking.status !== BookingStatus.ACCEPTED) {
     throw new ApiError(400, "Booking must be accepted before payment");
   }
   const existingPayment = await prisma.payment.findUnique({
@@ -2771,7 +2736,7 @@ var confirmPayment = async (transactionId) => {
     });
     await tx.booking.update({
       where: { id: payment.bookingId },
-      data: { status: BookingStatus2.PAID }
+      data: { status: BookingStatus.PAID }
     });
     return payment;
   });
@@ -2918,7 +2883,7 @@ var refundPayment = async (paymentId, userId, userRole) => {
     });
     await tx.booking.update({
       where: { id: payment.bookingId },
-      data: { status: BookingStatus2.CANCELLED }
+      data: { status: BookingStatus.CANCELLED }
     });
     return updated;
   });
