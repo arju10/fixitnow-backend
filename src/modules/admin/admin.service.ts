@@ -118,6 +118,7 @@ export const getAllUsers = async (filters?: { role?: string; status?: string }) 
 
 /**
  * Get all bookings with filters (admin view)
+ * ✅ Fixed: Explicitly handle undefined values
  */
 export const getAllBookings = async (filters?: {
   status?: string;
@@ -125,8 +126,9 @@ export const getAllBookings = async (filters?: {
   limit?: number;
 }) => {
   try {
-    const page = filters?.page || 1;
-    const limit = filters?.limit || 50;
+    // ✅ Explicitly handle undefined values
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 50;
     const skip = (page - 1) * limit;
 
     const where: any = {};
