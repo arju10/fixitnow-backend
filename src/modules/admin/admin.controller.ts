@@ -25,25 +25,29 @@ export const getStats = catchAsync(async (req: Request, res: Response) => {
 export const getUsers = catchAsync(async (req: Request, res: Response) => {
   console.log('👥 Admin users requested');
   const { role, status } = req.query;
-  const filters = {
-    role: role as string,
-    status: status as string,
-  };
+  // ✅ Only include filters if they exist
+  const filters: { role?: string; status?: string } = {};
+  if (role) filters.role = role as string;
+  if (status) filters.status = status as string;
+
   const users = await getAllUsers(filters);
   sendResponse(res, 200, 'Users fetched successfully', users);
 });
 
 /**
  * Get all bookings (admin view)
+ * ✅ Fixed: Properly handle optional properties
  */
 export const getBookings = catchAsync(async (req: Request, res: Response) => {
   console.log('📋 Admin bookings requested');
   const { status, page, limit } = req.query;
-  const filters = {
-    status: status as string,
-    page: page ? parseInt(page as string) : undefined,
-    limit: limit ? parseInt(limit as string) : undefined,
-  };
+
+  // ✅ Only include filters if they exist
+  const filters: { status?: string; page?: number; limit?: number } = {};
+  if (status) filters.status = status as string;
+  if (page) filters.page = parseInt(page as string);
+  if (limit) filters.limit = parseInt(limit as string);
+
   const result = await getAllBookings(filters);
   sendResponse(res, 200, 'Bookings fetched successfully', result);
 });
